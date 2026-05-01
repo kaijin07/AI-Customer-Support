@@ -1,21 +1,19 @@
 import axios from 'axios';
 
+/**
+ * Global Axios Instance
+ * 
+ * configured with a base URL and 'withCredentials: true' to 
+ * automatically include authentication cookies in all requests 
+ * sent to the backend.
+ */
 const api = axios.create({
+  // The base URL for all API requests
   baseURL: 'http://localhost:5000/api',
+  
+  // This allows the browser to include cookies in the request
+  // (Crucial for the HttpOnly JWT token we are now using)
+  withCredentials: true,
 });
-
-// Add a request interceptor to attach token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 export default api;

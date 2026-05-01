@@ -39,8 +39,12 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [navigate]);
 
-  const onLogout = () => {
-    localStorage.removeItem('token');
+  const onLogout = async () => {
+    try {
+      await api.get('/auth/logout');
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
     localStorage.removeItem('user');
     navigate('/');
   };

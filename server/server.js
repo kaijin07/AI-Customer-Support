@@ -1,47 +1,26 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import connectDB from './config/db.js';
-import authRoutes from './routes/authRoutes.js';
-import chatRoutes from './routes/chatRoutes.js';
-import botConfigRoutes from './routes/botConfigRoutes.js';
-import ticketRoutes from './routes/ticketRoutes.js';
+/**
+ * server.js - Entry point for the backend application
+ * 
+ * This file is responsible for:
+ * 1. Loading environment variables
+ * 2. Initializing the database connection
+ * 3. Starting the Express server
+ */
 
+import dotenv from 'dotenv';
+import connectDB from './src/config/db.js';
+import app from './src/app.js';
+
+// Load environment variables from .env file into process.env
 dotenv.config();
 
+// Establish connection to MongoDB using the URI provided in .env
 connectDB();
 
-const app = express();
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/bot-config', botConfigRoutes);
-app.use('/api/tickets', ticketRoutes);
-
-app.get('/test-ai', async (req, res) => {
-  try {
-    const { generateReply } = await import('./services/aiService.js');
-    const result = await generateReply(
-      [{ sender: 'user', text: 'Hello, what is your name?' }],
-      { businessName: 'Test Business' },
-      'TestUser'
-    );
-    res.json({ success: true, result });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-app.get('/', (req, res) => {
-  res.send('API is running...');
-});
-
+// Define the port the server will listen on, defaulting to 5000
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// Start listening for incoming requests on the specified port
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});

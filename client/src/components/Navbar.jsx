@@ -9,12 +9,15 @@ const Navbar = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
 
-  // Simple check for token, re-evaluates on route change
-  const token = localStorage.getItem('token');
   const user = JSON.parse(localStorage.getItem('user'));
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
+  const handleLogout = async () => {
+    try {
+      const { default: api } = await import('../api/axiosInstance.js');
+      await api.get('/auth/logout');
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
     localStorage.removeItem('user');
     navigate('/login');
   };
@@ -54,7 +57,7 @@ const Navbar = () => {
               {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
             </button>
 
-            {token ? (
+            {user ? (
               <div className="flex items-center gap-4">
                 <Link to="/dashboard" className="hidden md:flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                   <LayoutDashboard size={18} />
