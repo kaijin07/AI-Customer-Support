@@ -1,16 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, Bot, User } from 'lucide-react';
-import api from '../api/axiosInstance.js';
+import { useChat } from '../hooks/useChat.js';
+import { useAuth } from '../hooks/useAuth.js';
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { sendMessage, loading } = useChat();
+  const { user } = useAuth();
   const messagesEndRef = useRef(null);
   const navigate = useNavigate();
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -22,23 +23,14 @@ const Chat = () => {
     const userMessage = { sender: 'user', text: input.trim() };
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
-    setLoading(true);
 
     try {
-      const user = JSON.parse(localStorage.getItem('user')) || {};
-      const response = await api.post('/chat/send', { 
-        text: userMessage.text,
-        userName: user.name 
-      });
-      if (response.data.success) {
-        setMessages((prev) => [...prev, response.data.data]);
+      const data = await sendMessage(userMessage.text, user?.name);
+      if (data.success) {
+        setMessages((prev) => [...prev, data.data]);
       }
     } catch (error) {
-      console.error('Chat error:', error);
-      // Optional: Add a localized error message in the chat
       setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, I am having trouble connecting right now.' }]);
-    } finally {
-      setLoading(false);
     }
   };
 

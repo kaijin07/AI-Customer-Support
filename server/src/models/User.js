@@ -13,12 +13,19 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function() {
+        return this.provider === 'local';
+      },
       select: false,
     },
     businessName: {
       type: String,
       required: true,
+    },
+    provider: {
+      type: String,
+      enum: ['local', 'google'],
+      default: 'local',
     },
   },
   {

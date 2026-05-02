@@ -1,66 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings, MessageSquare, LogOut, Loader2, Plus, Trash2, Ticket as TicketIcon } from 'lucide-react';
-import api from '../api/axiosInstance.js';
+import { useAuth } from '../hooks/useAuth.js';
+import { useTickets } from '../hooks/useTickets.js';
+import { useBotConfig } from '../hooks/useBotConfig.js';
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [tickets, setTickets] = useState([]);
-  const [botConfig, setBotConfig] = useState({ faqs: [], instructions: '' });
+  const { user, logout, loading: authLoading } = useAuth();
+  const { tickets, fetchTickets, loading: ticketsLoading } = useTickets();
+  const { botConfig, setBotConfig, saving: savingConfig, fetchBotConfig, updateBotConfig } = useBotConfig();
   const [newFaq, setNewFaq] = useState({ question: '', answer: '' });
-  const [savingConfig, setSavingConfig] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        const [userRes, configRes, ticketsRes] = await Promise.all([
-          api.get('/auth/me'),
-          api.get('/bot-config'),
-          api.get('/tickets')
-        ]);
-
-        if (userRes.data.success) {
-          setUser(userRes.data.data);
-          setBotConfig(configRes.data.data || { faqs: [], instructions: '' });
-          setTickets(ticketsRes.data.data || []);
-        } else {
-          onLogout();
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard data", error);
-        onLogout();
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, [navigate]);
-
-  const onLogout = async () => {
-    try {
-      await api.get('/auth/logout');
-    } catch (error) {
-      console.error("Logout failed", error);
+    if (user) {
+      fetchTickets();
+      fetchBotConfig();
     }
-    localStorage.removeItem('user');
+  }, [user, fetchTickets, fetchBotConfig]);
+
+  const handleLogout = async () => {
+    await logout();
     navigate('/');
   };
 
   const handleSaveConfig = async () => {
-    setSavingConfig(true);
     try {
-      const response = await api.post('/bot-config', botConfig);
-      if (response.data.success) {
-        setBotConfig(response.data.data);
-        alert('Bot configuration saved successfully!');
-      }
+      await updateBotConfig(botConfig);
+      alert('Bot configuration saved successfully!');
     } catch (error) {
       alert('Failed to save configuration.');
-    } finally {
-      setSavingConfig(false);
     }
   };
 
@@ -80,7 +49,7 @@ const Dashboard = () => {
     }));
   };
 
-  if (loading) {
+  if (authLoading || ticketsLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <Loader2 className="animate-spin text-primary" size={48} />
@@ -91,11 +60,11 @@ const Dashboard = () => {
   if (!user) return null;
 
   return (
-    <div className="w-full max-w-6xl mx-auto p-8 pt-16 flex-1 space-y-10">
+    <div className="w-full max-6xl mx-auto p-8 pt-16 flex-1 space-y-10">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Welcome, {user.businessName}</h1>
         <button 
-          onClick={onLogout} 
+          onClick={handleLogout} 
           className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 hover:border-red-200 dark:hover:border-red-800 transition-colors"
         >
           <LogOut size={18} />

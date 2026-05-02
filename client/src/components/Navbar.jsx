@@ -1,24 +1,17 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Bot, LogIn, LogOut, LayoutDashboard } from 'lucide-react';
+import { Bot, LogIn, LogOut, LayoutDashboard, Sun, Moon } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { Sun, Moon } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth.js';
 
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-
-  const user = JSON.parse(localStorage.getItem('user'));
+  const { user, logout } = useAuth();
 
   const handleLogout = async () => {
-    try {
-      const { default: api } = await import('../api/axiosInstance.js');
-      await api.get('/auth/logout');
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
-    localStorage.removeItem('user');
+    await logout();
     navigate('/login');
   };
 

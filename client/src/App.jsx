@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import Navbar from './components/Navbar.jsx';
+import { useAuth } from './hooks/useAuth.js';
 
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
@@ -13,7 +14,10 @@ import Chat from './pages/Chat.jsx';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const user = localStorage.getItem('user');
+  const { user, isInitialized } = useAuth();
+  
+  if (!isInitialized) return null; // Or a loading spinner
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
@@ -21,6 +25,12 @@ const ProtectedRoute = ({ children }) => {
 };
 
 const AppContent = () => {
+  const { getMe } = useAuth();
+
+  useEffect(() => {
+    getMe();
+  }, [getMe]);
+
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
       <Navbar />
