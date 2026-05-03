@@ -19,10 +19,21 @@ const botConfigSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    botName: {
+      type: String,
+      default: 'Support Assistant',
+    },
     faqs: [faqSchema],
     instructions: {
       type: String,
       default: '',
+    },
+    knowledgeSources: {
+      pdfContent: {
+        type: String,
+        default: '',
+      },
+      notionLinks: [String],
     },
   },
   {

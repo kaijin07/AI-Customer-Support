@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import botService from '../services/botService';
 
 export const useBotConfig = () => {
@@ -19,10 +19,12 @@ export const useBotConfig = () => {
     }
   }, []);
 
-  const updateBotConfig = async (configData) => {
+  const updateBotConfig = async (payload) => {
     setSaving(true);
     try {
-      const data = await botService.updateBotConfig(configData);
+      // payload can be FormData (if there are files) or a plain object.
+      // botService handles the axios request appropriately.
+      const data = await botService.updateBotConfig(payload);
       setBotConfig(data.data);
       return data;
     } catch (err) {

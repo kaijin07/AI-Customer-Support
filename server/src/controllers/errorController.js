@@ -1,27 +1,33 @@
 const globalErrorHandler = (err, req, res, next) => {
-  let error = { ...err };
-  error.message = err.message;
+  let statusCode = err.statusCode || 500;
+  let message = err.message || 'Internal Server Error';
 
   // Log for developer
   console.error(err);
 
   // Mongoose duplicate key
   if (err.code === 11000) {
-    const message = 'User already exists';
-    error = new Error(message);
-    error.statusCode = 400;
+    const field = Object.keys(err.keyValue)[0];
+    message = `Duplicate field value entered: ${field}. Please use another value.`;
+    statusCode = 400;
   }
 
   // Mongoose validation error
   if (err.name === 'ValidationError') {
-    const message = Object.values(err.errors).map((val) => val.message);
-    error = new Error(message);
-    error.statusCode = 400;
+    message = Object.values(err.errors).map((val) => val.message).join(', ');
+    statusCode = 400;
   }
 
-  res.status(error.statusCode || 500).json({
+  // CastError (invalid ObjectId)
+  if (err.name === 'CastError') {
+    message = `Resource not found with id of ${err.value}`;
+    statusCode = 404;
+  }
+
+  res.status(statusCode).json({
     success: false,
-    message: error.message || 'Server Error',
+    message,
+    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 };
 

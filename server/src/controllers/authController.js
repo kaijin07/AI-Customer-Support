@@ -22,13 +22,14 @@ const generateToken = (id) => {
 const sendTokenResponse = (user, statusCode, res) => {
   const token = generateToken(user._id);
 
+  const isProd = config.env === 'production';
   const options = {
     expires: new Date(
       Date.now() + config.jwtCookieExpire * 24 * 60 * 60 * 1000
     ),
     httpOnly: true,
-    secure: config.env === 'production',
-    sameSite: 'strict',
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
   };
 
   res
@@ -53,6 +54,12 @@ const sendTokenResponse = (user, statusCode, res) => {
  */
 export const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password, businessName } = req.body;
+
+  // Prevent duplicate signup
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ success: false, message: 'User already exists with this email' });
+  }
 
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -112,15 +119,28 @@ export const googleLogin = asyncHandler(async (req, res) => {
   let user = await User.findOne({ email });
 
   if (user) {
-    // If user exists but was local, we might want to link or reject. 
-    // Here we just allow login if email matches.
+    // If user exists with provider "local", reject login to avoid confusion/security issues
+    if (user.provider === 'local') {
+      return res.status(400).json({
+        success: false,
+        message: 'An account with this email already exists. Please login with your password.'
+      });
+    }
     sendTokenResponse(user, 200, res);
   } else {
+    // If it's a NEW user and businessName is missing, we need to ask for it
+    if (!businessName || !businessName.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: 'BUSINESS_NAME_REQUIRED'
+      });
+    }
+
     // Create new user via Google
     user = await User.create({
       name,
       email,
-      businessName: businessName || `${name}'s Business`,
+      businessName,
       provider: 'google',
     });
     sendTokenResponse(user, 201, res);
@@ -133,9 +153,12 @@ export const googleLogin = asyncHandler(async (req, res) => {
  * @access  Public
  */
 export const logoutUser = asyncHandler(async (req, res) => {
+  const isProd = config.env === 'production';
   res.cookie('token', 'none', {
     expires: new Date(Date.now() + 10 * 1000),
     httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
   });
 
   res.status(200).json({

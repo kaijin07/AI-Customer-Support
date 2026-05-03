@@ -8,12 +8,12 @@ const openai = new OpenAI({
 
 export const generateReply = async (messages, businessData, userName) => {
   try {
-    const { faqs = [], instructions = '' } = businessData || {};
+    const { faqs = [], instructions = '', botName = 'Support Assistant', knowledge = '' } = businessData || {};
     const businessName = businessData?.businessName || 'our business';
 
     const faqString = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
 
-    const systemPrompt = `You are a helpful and friendly customer support assistant for ${businessName}.
+    const systemPrompt = `You are ${botName}, a helpful and friendly customer support assistant for ${businessName}.
 You are currently talking to a user named ${userName || 'Customer'}. Use their name occasionally to be polite.
 
 Instructions from the business:
@@ -22,9 +22,12 @@ ${instructions}
 Frequently Asked Questions:
 ${faqString}
 
+Additional Knowledge:
+${knowledge}
+
 Guidelines:
-1. Always try to answer the user's question based on the provided FAQs or Instructions.
-2. If the user asks a question that is NOT covered by the FAQs or instructions, politely inform them that you do not have that information and suggest they escalate to a human agent or create a support ticket.
+1. Always try to answer the user's question based on the provided FAQs, Instructions, or Additional Knowledge.
+2. If the user asks a question that is NOT covered by the provided information, politely inform them that you do not have that information and suggest they escalate to a human agent or create a support ticket.
 3. Keep your answers concise, professional, and friendly.
 4. If you detect that the user is angry, frustrated, or explicitly asks for a human, agent, or support ticket, ALWAYS include the exact keyword "ESCALATE_TICKET" at the very end of your response so the system can automatically create a ticket.`;
 

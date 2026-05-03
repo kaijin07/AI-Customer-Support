@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Settings, MessageSquare, LogOut, Loader2, Plus, Trash2, Ticket as TicketIcon } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+
 import { useAuth } from '../hooks/useAuth.js';
 import { useTickets } from '../hooks/useTickets.js';
 import { useBotConfig } from '../hooks/useBotConfig.js';
 
+import Sidebar from '../components/dashboard/Sidebar.jsx';
+import OverviewTab from '../components/dashboard/OverviewTab.jsx';
+import ConfigTab from '../components/dashboard/ConfigTab.jsx';
+import TicketsTab from '../components/dashboard/TicketsTab.jsx';
+import EmbedTab from '../components/dashboard/EmbedTab.jsx';
+
 const Dashboard = () => {
-  const { user, logout, loading: authLoading } = useAuth();
-  const { tickets, fetchTickets, loading: ticketsLoading } = useTickets();
-  const { botConfig, setBotConfig, saving: savingConfig, fetchBotConfig, updateBotConfig } = useBotConfig();
-  const [newFaq, setNewFaq] = useState({ question: '', answer: '' });
-  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const { tickets, fetchTickets, updateTicket, loading: ticketsLoading } = useTickets();
+  const { botConfig, fetchBotConfig, updateBotConfig, saving: savingConfig } = useBotConfig();
+  
+  const [activeTab, setActiveTab] = useState('overview');
 
   useEffect(() => {
     if (user) {
@@ -19,181 +26,59 @@ const Dashboard = () => {
     }
   }, [user, fetchTickets, fetchBotConfig]);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
-  };
-
-  const handleSaveConfig = async () => {
-    try {
-      await updateBotConfig(botConfig);
-      alert('Bot configuration saved successfully!');
-    } catch (error) {
-      alert('Failed to save configuration.');
-    }
-  };
-
-  const handleAddFaq = () => {
-    if (!newFaq.question.trim() || !newFaq.answer.trim()) return;
-    setBotConfig(prev => ({
-      ...prev,
-      faqs: [...prev.faqs, newFaq]
-    }));
-    setNewFaq({ question: '', answer: '' });
-  };
-
-  const handleRemoveFaq = (index) => {
-    setBotConfig(prev => ({
-      ...prev,
-      faqs: prev.faqs.filter((_, i) => i !== index)
-    }));
-  };
-
   if (authLoading || ticketsLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center bg-bg">
         <Loader2 className="animate-spin text-primary" size={48} />
       </div>
     );
   }
 
-  if (!user) return null;
+  const renderTab = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <OverviewTab tickets={tickets} faqs={botConfig?.faqs} />;
+      case 'config':
+        return (
+          <ConfigTab 
+            botConfig={botConfig} 
+            updateBotConfig={updateBotConfig} 
+            fetchBotConfig={fetchBotConfig}
+            savingConfig={savingConfig} 
+          />
+        );
+      case 'tickets':
+        return <TicketsTab tickets={tickets} updateTicket={updateTicket} />;
+      case 'embed':
+        return <EmbedTab user={user} />;
+      default:
+        return <OverviewTab tickets={tickets} faqs={botConfig?.faqs} />;
+    }
+  };
 
   return (
-    <div className="w-full max-6xl mx-auto p-8 pt-16 flex-1 space-y-10">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Welcome, {user.businessName}</h1>
-        <button 
-          onClick={handleLogout} 
-          className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 hover:border-red-200 dark:hover:border-red-800 transition-colors"
-        >
-          <LogOut size={18} />
-          Logout
-        </button>
-      </div>
+    <div className="flex-1 flex flex-col md:flex-row w-full bg-bg min-h-screen pt-20">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Chatbot Preview Card */}
-        <div className="flex flex-col items-center text-center gap-4 p-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm h-full">
-          <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-full">
-            <MessageSquare size={48} className="text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold">Preview Chatbot</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
-            Test how your AI customer support chatbot interacts with users in real-time.
-          </p>
-          <button 
-            onClick={() => navigate('/chat')}
-            className="mt-4 px-6 py-2 bg-primary hover:bg-primary-hover text-white font-medium rounded-md transition-colors"
-          >
-            Start Preview
-          </button>
-        </div>
-
-        {/* Support Tickets Card */}
-        <div className="flex flex-col gap-4 p-6 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm h-full max-h-96 overflow-y-auto">
-          <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-700 pb-4 mb-2">
-            <TicketIcon className="text-primary" />
-            <h3 className="text-xl font-semibold">Support Tickets ({tickets.length})</h3>
-          </div>
-          {tickets.length === 0 ? (
-            <p className="text-sm text-gray-500 text-center py-8">No tickets escalated yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {tickets.map(ticket => (
-                <div key={ticket._id} className="p-3 border border-gray-200 dark:border-gray-700 rounded-md">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${ticket.status === 'open' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300' : 'bg-gray-100 text-gray-800'}`}>
-                      {ticket.status.toUpperCase()}
-                    </span>
-                    <span className="text-xs text-gray-400">{new Date(ticket.createdAt).toLocaleDateString()}</span>
-                  </div>
-                  <p className="text-sm font-medium line-clamp-2 mt-2">{ticket.userMessage}</p>
-                </div>
-              ))}
+      {/* Main Content Area */}
+      <div className="flex-1 p-4 md:p-10 overflow-y-auto w-full">
+        <div className="max-w-5xl mx-auto space-y-8">
+          
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10">
+            <div>
+              <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+              <p className="text-muted">Manage your AI agent and support tickets.</p>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Bot Configuration Section */}
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Settings className="text-primary" />
-            <h3 className="text-xl font-semibold">Bot Configuration</h3>
-          </div>
-          <button 
-            onClick={handleSaveConfig}
-            disabled={savingConfig}
-            className="px-4 py-2 bg-primary hover:bg-primary-hover text-white text-sm font-medium rounded-md transition-colors disabled:opacity-70"
-          >
-            {savingConfig ? 'Saving...' : 'Save Configuration'}
-          </button>
-        </div>
-        
-        <div className="p-6 space-y-8">
-          {/* Instructions */}
-          <div>
-            <label className="block text-sm font-semibold mb-2">Custom AI Instructions</label>
-            <p className="text-xs text-gray-500 mb-2">Tell the AI how to behave, what tone to use, and any special rules.</p>
-            <textarea 
-              value={botConfig.instructions}
-              onChange={(e) => setBotConfig(prev => ({ ...prev, instructions: e.target.value }))}
-              placeholder="e.g. Always be cheerful. Recommend our premium plan if asked about pricing."
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent focus:ring-2 focus:ring-primary h-24"
-            />
-          </div>
-
-          {/* FAQs */}
-          <div>
-            <div className="mb-4">
-              <label className="block text-sm font-semibold mb-1">Frequently Asked Questions ({botConfig.faqs.length})</label>
-              <p className="text-xs text-gray-500">The AI will use these to answer instantly and save API costs.</p>
+            <div className="flex items-center gap-3">
+              <span className="px-4 py-1.5 bg-surface border border-border rounded-full text-sm font-medium text-accent shadow-sm">
+                {user?.businessName || 'Business Profile'}
+              </span>
             </div>
-            
-            {/* FAQ List */}
-            <div className="space-y-3 mb-6">
-              {botConfig.faqs.map((faq, index) => (
-                <div key={index} className="flex gap-4 items-start p-3 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700">
-                  <div className="flex-1 space-y-1">
-                    <p className="text-sm font-medium">Q: {faq.question}</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">A: {faq.answer}</p>
-                  </div>
-                  <button 
-                    onClick={() => handleRemoveFaq(index)}
-                    className="text-red-500 hover:text-red-700 p-1"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
+          </header>
 
-            {/* Add FAQ Form */}
-            <div className="flex flex-col md:flex-row gap-3 items-start">
-              <input 
-                type="text"
-                placeholder="Question"
-                value={newFaq.question}
-                onChange={(e) => setNewFaq({ ...newFaq, question: e.target.value })}
-                className="flex-1 w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent"
-              />
-              <input 
-                type="text"
-                placeholder="Answer"
-                value={newFaq.answer}
-                onChange={(e) => setNewFaq({ ...newFaq, answer: e.target.value })}
-                className="flex-1 w-full p-2 border border-gray-300 dark:border-gray-600 rounded-md bg-transparent"
-              />
-              <button 
-                onClick={handleAddFaq}
-                className="w-full md:w-auto px-4 py-2 border border-primary text-primary hover:bg-primary hover:text-white rounded-md flex items-center justify-center gap-2 transition-colors"
-              >
-                <Plus size={16} /> Add FAQ
-              </button>
-            </div>
-          </div>
+          <AnimatePresence mode="wait">
+            {renderTab()}
+          </AnimatePresence>
         </div>
       </div>
     </div>

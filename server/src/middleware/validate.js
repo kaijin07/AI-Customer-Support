@@ -9,6 +9,7 @@ const validate = (schema) => (req, res, next) => {
     });
   }
 
+  req.body = result.data;
   next();
 };
 

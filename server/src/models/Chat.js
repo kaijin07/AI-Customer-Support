@@ -23,6 +23,12 @@ const chatSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
+    },
+    visitorId: {
+      type: String,
+      required: true,
+      index: true,
     },
     messages: [messageSchema],
   },

@@ -6,6 +6,13 @@ const ticketSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
+      index: true,
+    },
+    visitorId: {
+      type: String,
+    },
+    userName: {
+      type: String,
     },
     userMessage: {
       type: String,

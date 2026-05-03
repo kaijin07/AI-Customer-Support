@@ -20,10 +20,23 @@ export const useTickets = () => {
     }
   }, []);
 
+  const updateTicket = useCallback(async (id, status) => {
+    try {
+      await ticketService.updateTicketStatus(id, status);
+      await fetchTickets(); // Refresh list after update
+      return true;
+    } catch (err) {
+      const message = err.response?.data?.message || err.message;
+      setError(message);
+      return false;
+    }
+  }, [fetchTickets]);
+
   return {
     tickets,
     loading,
     error,
     fetchTickets,
+    updateTicket,
   };
 };

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider } from './context/ThemeContext.jsx';
 import Navbar from './components/Navbar.jsx';
 import { useAuth } from './hooks/useAuth.js';
+import { Toaster } from 'react-hot-toast';
 
 import Home from './pages/Home.jsx';
 import About from './pages/About.jsx';
@@ -32,7 +33,7 @@ const AppContent = () => {
   }, [getMe]);
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 font-sans">
+    <div className="min-h-screen flex flex-col bg-bg text-text font-sans">
       <Navbar />
       <main className="flex-1 flex flex-col w-full">
         <Routes>
@@ -67,6 +68,7 @@ function App() {
   return (
     <ThemeProvider>
       <Router>
+        <Toaster position="top-right" />
         <AppContent />
       </Router>
     </ThemeProvider>

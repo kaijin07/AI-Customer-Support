@@ -6,9 +6,9 @@ export const useAuth = () => {
   const dispatch = useDispatch();
   const { user, loading, error, isInitialized } = useSelector((state) => state.auth);
 
-  const handleSignup = useCallback((userData) => dispatch(signup(userData)), [dispatch]);
-  const handleLogin = useCallback((credentials) => dispatch(login(credentials)), [dispatch]);
-  const handleGoogleLogin = useCallback((idToken, businessName) => dispatch(googleLoginThunk({ idToken, businessName })), [dispatch]);
+  const handleSignup = useCallback((userData) => dispatch(signup(userData)).unwrap(), [dispatch]);
+  const handleLogin = useCallback((credentials) => dispatch(login(credentials)).unwrap(), [dispatch]);
+  const handleGoogleLogin = useCallback((idToken, businessName) => dispatch(googleLoginThunk({ idToken, businessName })).unwrap(), [dispatch]);
   const handleLogout = useCallback(() => dispatch(logout()), [dispatch]);
   const handleGetMe = useCallback(() => dispatch(getMe()), [dispatch]);
   const handleReset = useCallback(() => dispatch(reset()), [dispatch]);
