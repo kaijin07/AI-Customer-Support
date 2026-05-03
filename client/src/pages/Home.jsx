@@ -24,7 +24,7 @@ const Home = () => {
 
       {/* Global Background Grid Pattern */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]" 
-           style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} 
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} 
       />
 
       {/* 1. HERO SECTION */}

@@ -48,6 +48,20 @@ export const sendMessage = asyncHandler(async (req, res) => {
   // Push user message
   const userMessage = { sender: 'user', text };
   chat.messages.push(userMessage);
+  
+  const io = req.app.get('io');
+  if (io) {
+    io.to(visitorId).emit('newMessage', userMessage);
+  }
+
+  // If human has taken over, don't generate AI reply
+  if (chat.humanTakeover) {
+    await chat.save();
+    return res.status(200).json({
+      success: true,
+      data: { sender: 'agent', text: '', isAssisted: true },
+    });
+  }
 
   // Fetch bot configuration (FAQs + Instructions + botName + knowledge)
   const botConfig = await BotConfig.findOne({ businessId });
@@ -103,6 +117,10 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
   const botMessage = { sender: 'bot', text: botReplyText };
   chat.messages.push(botMessage);
+  
+  if (io) {
+    io.to(visitorId).emit('newMessage', botMessage);
+  }
 
   // Limit chat history to last 50 messages
   if (chat.messages.length > 50) {

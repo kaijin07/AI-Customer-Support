@@ -4,7 +4,7 @@ const messageSchema = new mongoose.Schema(
   {
     sender: {
       type: String,
-      enum: ['user', 'bot'],
+      enum: ['user', 'bot', 'agent'],
       required: true,
     },
     text: {
@@ -29,6 +29,10 @@ const chatSchema = new mongoose.Schema(
       type: String,
       required: true,
       index: true,
+    },
+    humanTakeover: {
+      type: Boolean,
+      default: false,
     },
     messages: [messageSchema],
   },

@@ -16,6 +16,8 @@ import chatRoutes from './routes/chatRoutes.js';
 import botConfigRoutes from './routes/botConfigRoutes.js';
 import ticketRoutes from './routes/ticketRoutes.js';
 import embedRoutes from './routes/embedRoutes.js';
+import conversationRoutes from './routes/conversationRoutes.js';
+import messageRoutes from './routes/messageRoutes.js';
 
 const app = express();
 
@@ -54,6 +56,8 @@ app.use('/api/auth', limiter, authRoutes);
 app.use('/api/chat', limiter, chatRoutes);
 app.use('/api/bot-config', limiter, botConfigRoutes);
 app.use('/api/tickets', limiter, ticketRoutes);
+app.use('/api/conversations', limiter, conversationRoutes);
+app.use('/api/messages', limiter, messageRoutes);
 app.use('/api/embed', embedRoutes);
 
 // Root API status route

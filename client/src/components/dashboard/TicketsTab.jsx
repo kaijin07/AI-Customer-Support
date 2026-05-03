@@ -1,15 +1,31 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Ticket as TicketIcon, HelpCircle, CheckCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Ticket as TicketIcon, HelpCircle, CheckCircle, MessageSquare, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import ConversationView from './ConversationView';
+import ticketService from '../../services/ticketService';
 
-const TicketsTab = ({ tickets, updateTicket }) => {
+const TicketsTab = ({ tickets, updateTicket, fetchTickets }) => {
+  const [selectedTicket, setSelectedTicket] = useState(null);
+
   const handleCloseTicket = async (id) => {
     const success = await updateTicket(id, 'closed');
     if (success) {
       toast.success('Ticket marked as closed!');
     } else {
       toast.error('Failed to close ticket.');
+    }
+  };
+
+  const handleDeleteTicket = async (id) => {
+    try {
+      const res = await ticketService.deleteTicket(id);
+      if (res.success) {
+        toast.success('Ticket deleted successfully');
+        if (fetchTickets) fetchTickets();
+      }
+    } catch (err) {
+      toast.error('Failed to delete ticket.');
     }
   };
 
@@ -33,38 +49,68 @@ const TicketsTab = ({ tickets, updateTicket }) => {
             <p>No support tickets yet. Your bot is doing a great job!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {tickets.map(ticket => (
-              <div key={ticket._id} className="p-5 bg-bg rounded-md border border-border hover:border-muted transition-colors">
-                <div className="flex justify-between items-start mb-4">
-                  <div className="space-y-1">
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                      ticket.status === 'open' ? 'bg-amber-500/20 text-amber-500' : 'bg-success/20 text-success'
-                    }`}>
-                      {ticket.status}
-                    </span>
-                    <h4 className="font-semibold text-white truncate max-w-md">{ticket.userName || 'Anonymous'}</h4>
-                    <p className="text-[10px] text-muted">{new Date(ticket.createdAt).toLocaleString()}</p>
+              <div key={ticket._id} className="p-6 bg-surface rounded-xl border border-border hover:border-primary/50 transition-all flex flex-col justify-between h-full">
+                <div>
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="space-y-2">
+                      <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
+                        ticket.status === 'open' ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : 'bg-success/20 text-success border border-success/30'
+                      }`}>
+                        {ticket.status}
+                      </span>
+                      <h4 className="font-semibold text-lg text-white truncate max-w-[200px]">{ticket.userName || 'Anonymous'}</h4>
+                      <p className="text-xs text-muted font-medium">{new Date(ticket.createdAt).toLocaleString()}</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      {ticket.status === 'open' && (
+                        <button 
+                          onClick={() => handleCloseTicket(ticket._id)}
+                          className="p-2 rounded-lg bg-success/10 text-success hover:bg-success hover:text-white transition-colors"
+                          title="Mark Closed"
+                        >
+                          <CheckCircle size={16} />
+                        </button>
+                      )}
+                      {(ticket.status === 'closed' || ticket.status === 'resolved') && (
+                        <button 
+                          onClick={() => handleDeleteTicket(ticket._id)}
+                          className="p-2 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors"
+                          title="Delete Ticket"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <button className="text-xs text-primary hover:underline">View Conversation</button>
-                    {ticket.status === 'open' && (
-                      <button 
-                        onClick={() => handleCloseTicket(ticket._id)}
-                        className="text-xs flex items-center gap-1 text-success hover:underline"
-                      >
-                        <CheckCircle size={12} />
-                        Mark Closed
-                      </button>
-                    )}
+                  <div className="bg-bg p-4 rounded-lg mb-4 border border-border/50">
+                    <p className="text-sm text-muted italic line-clamp-3">"{ticket.userMessage}"</p>
                   </div>
                 </div>
-                <p className="text-sm text-muted bg-surface p-3 rounded italic">"{ticket.userMessage}"</p>
+
+                <button 
+                  onClick={() => setSelectedTicket(ticket)}
+                  className="w-full py-3 mt-auto rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-black font-semibold transition-colors flex items-center justify-center gap-2 text-sm"
+                >
+                  <MessageSquare size={16} />
+                  View Conversation
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {selectedTicket && (
+          <ConversationView 
+            ticket={selectedTicket} 
+            onClose={() => setSelectedTicket(null)} 
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

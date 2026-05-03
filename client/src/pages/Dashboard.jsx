@@ -48,7 +48,7 @@ const Dashboard = () => {
           />
         );
       case 'tickets':
-        return <TicketsTab tickets={tickets} updateTicket={updateTicket} />;
+        return <TicketsTab tickets={tickets} updateTicket={updateTicket} fetchTickets={fetchTickets} />;
       case 'embed':
         return <EmbedTab user={user} />;
       default:
