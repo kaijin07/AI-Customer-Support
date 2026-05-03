@@ -3,13 +3,9 @@ import User from '../models/User.js';
 import BotConfig from '../models/BotConfig.js';
 import Ticket from '../models/Ticket.js';
 import { generateReply } from '../services/aiService.js';
+import { retrieveRelevantSummaries, formatSummariesForPrompt } from '../services/ragService.js';
 import asyncHandler from '../utils/asyncHandler.js';
 
-/**
- * @desc    Send a message to the bot
- * @route   POST /api/chat/send
- * @access  Private
- */
 /**
  * @desc    Send a message to the bot
  * @route   POST /api/chat/send
@@ -17,7 +13,7 @@ import asyncHandler from '../utils/asyncHandler.js';
  */
 export const sendMessage = asyncHandler(async (req, res) => {
   const { text, userName, visitorId: reqVisitorId, businessId: reqBusinessId } = req.body;
-  
+
   // Use businessId from req.body (for widget) or req.user (for dashboard)
   const businessId = reqBusinessId || req.user?.id;
   if (!businessId) {
@@ -48,7 +44,7 @@ export const sendMessage = asyncHandler(async (req, res) => {
   // Push user message
   const userMessage = { sender: 'user', text };
   chat.messages.push(userMessage);
-  
+
   const io = req.app.get('io');
   if (io) {
     io.to(visitorId).emit('newMessage', userMessage);
@@ -66,37 +62,45 @@ export const sendMessage = asyncHandler(async (req, res) => {
   // Fetch bot configuration (FAQs + Instructions + botName + knowledge)
   const botConfig = await BotConfig.findOne({ businessId });
   const botName = botConfig?.botName || 'Support Assistant';
-  const businessData = {
-    faqs: botConfig ? botConfig.faqs : [],
-    instructions: botConfig ? botConfig.instructions : '',
-    botName,
-    businessName,
-    knowledge: botConfig?.knowledgeSources?.pdfContent || '',
-  };
 
-  // Pre-check for explicit hardcoded escalation requests
+  // Pre-check for explicit escalation requests
   const lowerText = text.toLowerCase();
-  // Removed "help" as per requirements
-  const explicitEscalate = lowerText.includes('talk to human') || lowerText.includes('agent') || lowerText.includes('talk to agent');
+  const explicitEscalate =
+    lowerText.includes('talk to human') ||
+    lowerText.includes('agent') ||
+    lowerText.includes('talk to agent');
 
-  let botReplyText = "";
+  let botReplyText = '';
   let shouldCreateTicket = explicitEscalate;
 
-  // Fast path: Simple keyword match for FAQs to save API calls
-  let faqMatch = null;
+  // Fast path: exact/partial FAQ match (saves an AI API call)
   const faqs = botConfig?.faqs || [];
+  let faqMatch = null;
   if (faqs.length > 0 && !explicitEscalate) {
-    // Partial matching
-    faqMatch = faqs.find(faq => 
-      lowerText.includes(faq.question.toLowerCase()) || 
-      faq.question.toLowerCase().includes(lowerText)
+    faqMatch = faqs.find(
+      (faq) =>
+        lowerText.includes(faq.question.toLowerCase()) ||
+        faq.question.toLowerCase().includes(lowerText)
     );
   }
 
   if (faqMatch) {
+    // Exact FAQ hit — no AI call needed
     botReplyText = faqMatch.answer;
-  } else {
-    // Use AI to generate reply based on context and FAQs
+  } else if (!explicitEscalate) {
+    // RAG lookup: find relevant ticket summaries from the knowledge base
+    const relevantSummaries = await retrieveRelevantSummaries(text, businessId);
+    const ragContext = formatSummariesForPrompt(relevantSummaries);
+
+    const businessData = {
+      faqs,
+      instructions: botConfig?.instructions || '',
+      botName,
+      businessName,
+      knowledge: botConfig?.knowledgeSources?.pdfContent || '',
+      ragContext,
+    };
+
     const aiResponse = await generateReply(chat.messages, businessData, userName);
     botReplyText = aiResponse.text;
     if (aiResponse.escalate) {
@@ -106,18 +110,22 @@ export const sendMessage = asyncHandler(async (req, res) => {
 
   // Handle ticket creation if escalated
   if (shouldCreateTicket) {
-    botReplyText = `Your request has been escalated to ${botName}. Our team will contact you shortly.`;
-    await Ticket.create({
+    botReplyText = `Your request has been escalated to human agents. Our team will contact you shortly.`;
+    const newTicket = await Ticket.create({
       businessId,
       visitorId,
       userName: userName || 'Anonymous Visitor',
       userMessage: text,
     });
+
+    if (io) {
+      io.to(businessId.toString()).emit('newTicket', newTicket);
+    }
   }
 
   const botMessage = { sender: 'bot', text: botReplyText };
   chat.messages.push(botMessage);
-  
+
   if (io) {
     io.to(visitorId).emit('newMessage', botMessage);
   }
@@ -127,7 +135,6 @@ export const sendMessage = asyncHandler(async (req, res) => {
     chat.messages = chat.messages.slice(-50);
   }
 
-  // Save chat history
   await chat.save();
 
   res.status(200).json({

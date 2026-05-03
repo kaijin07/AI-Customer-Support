@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { AnimatePresence } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { io } from 'socket.io-client';
+import toast from 'react-hot-toast';
 
 import { useAuth } from '../hooks/useAuth.js';
 import { useTickets } from '../hooks/useTickets.js';
@@ -17,7 +18,13 @@ const Dashboard = () => {
   const { tickets, fetchTickets, updateTicket, loading: ticketsLoading } = useTickets();
   const { botConfig, fetchBotConfig, updateBotConfig, saving: savingConfig } = useBotConfig();
   
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('dashboardActiveTab') || 'overview';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('dashboardActiveTab', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     if (user) {
@@ -25,6 +32,28 @@ const Dashboard = () => {
       fetchBotConfig();
     }
   }, [user, fetchTickets, fetchBotConfig]);
+
+  // Socket for real-time ticket updates
+  useEffect(() => {
+    if (!user?._id) return;
+
+    const backendUrl = import.meta.env.VITE_API_URL 
+      ? import.meta.env.VITE_API_URL.replace('/api', '') 
+      : 'http://localhost:5000';
+    
+    const socket = io(backendUrl);
+
+    socket.emit('joinConversation', user._id); // Join business room (reusing the same event name for now)
+
+    socket.on('newTicket', (newTicket) => {
+      toast.success('New ticket received!');
+      fetchTickets(); // Refresh tickets list
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [user?._id, fetchTickets]);
 
   if (authLoading || ticketsLoading) {
     return (
@@ -76,9 +105,7 @@ const Dashboard = () => {
             </div>
           </header>
 
-          <AnimatePresence mode="wait">
-            {renderTab()}
-          </AnimatePresence>
+          {renderTab()}
         </div>
       </div>
     </div>

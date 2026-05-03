@@ -6,12 +6,34 @@ const openai = new OpenAI({
   baseURL: 'https://api.groq.com/openai/v1',
 });
 
+/**
+ * Generate an AI reply using the provided conversation history and business context.
+ * businessData now optionally includes `ragContext` — formatted ticket summaries
+ * retrieved by the RAG service before this call.
+ *
+ * Priority in the prompt:
+ *   1. FAQs (direct match handled in chatController before AI call)
+ *   2. RAG context (past ticket resolutions)
+ *   3. Uploaded knowledge (PDF content)
+ *   4. General instructions
+ *
+ * @param {Array}  messages      - Conversation so far: [{ sender, text }]
+ * @param {Object} businessData  - { faqs, instructions, botName, businessName, knowledge, ragContext }
+ * @param {string} userName      - Name of the current user/visitor
+ * @returns {{ text: string, escalate: boolean }}
+ */
 export const generateReply = async (messages, businessData, userName) => {
   try {
-    const { faqs = [], instructions = '', botName = 'Support Assistant', knowledge = '' } = businessData || {};
+    const {
+      faqs = [],
+      instructions = '',
+      botName = 'Support Assistant',
+      knowledge = '',
+      ragContext = '',
+    } = businessData || {};
     const businessName = businessData?.businessName || 'our business';
 
-    const faqString = faqs.map(f => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+    const faqString = faqs.map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
 
     const systemPrompt = `You are ${botName}, a helpful and friendly customer support assistant for ${businessName}.
 You are currently talking to a user named ${userName || 'Customer'}. Use their name occasionally to be polite.
@@ -22,21 +44,19 @@ ${instructions}
 Frequently Asked Questions:
 ${faqString}
 
-Additional Knowledge:
-${knowledge}
-
+${ragContext ? ragContext + '\n' : ''}${knowledge ? `Additional Knowledge:\n${knowledge}\n` : ''}
 Guidelines:
-1. Always try to answer the user's question based on the provided FAQs, Instructions, or Additional Knowledge.
-2. If the user asks a question that is NOT covered by the provided information, politely inform them that you do not have that information and suggest they escalate to a human agent or create a support ticket.
-3. Keep your answers concise, professional, and friendly.
-4. If you detect that the user is angry, frustrated, or explicitly asks for a human, agent, or support ticket, ALWAYS include the exact keyword "ESCALATE_TICKET" at the very end of your response so the system can automatically create a ticket.`;
+1. Answer using FAQs, past resolutions, or additional knowledge — in that priority order.
+2. If the user's question is NOT covered by any of the above, politely say you don't have that info and suggest escalating to a human agent.
+3. Keep answers concise, professional, and friendly.
+4. If the user is angry, frustrated, or explicitly asks for a human or agent, ALWAYS include the exact keyword "ESCALATE_TICKET" at the very end of your response.`;
 
     const apiMessages = [
       { role: 'system', content: systemPrompt },
-      ...messages.map(msg => ({
+      ...messages.map((msg) => ({
         role: msg.sender === 'user' ? 'user' : 'assistant',
         content: msg.text,
-      }))
+      })),
     ];
 
     const response = await openai.chat.completions.create({
@@ -47,22 +67,15 @@ Guidelines:
     });
 
     const replyText = response.choices[0].message.content.trim();
-    
-    // Check if the AI decided to escalate
     const escalate = replyText.includes('ESCALATE_TICKET');
-    
-    // Clean up the reply text if the flag was included
     const cleanReplyText = replyText.replace('ESCALATE_TICKET', '').trim();
 
-    return {
-      text: cleanReplyText,
-      escalate
-    };
+    return { text: cleanReplyText, escalate };
   } catch (error) {
     console.error('Groq AI Service Error:', error.message || error);
     return {
-      text: "Sorry, I am having trouble connecting right now.",
-      escalate: false
+      text: 'Sorry, I am having trouble connecting right now.',
+      escalate: false,
     };
   }
 };

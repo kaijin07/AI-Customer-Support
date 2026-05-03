@@ -1,5 +1,47 @@
 import Ticket from '../models/Ticket.js';
+import Chat from '../models/Chat.js';
+import TicketSummary from '../models/TicketSummary.js';
+import { shouldSummarize, summarizeConversation } from '../services/summarizationService.js';
 import asyncHandler from '../utils/asyncHandler.js';
+
+/**
+ * Shared helper: summarizes a conversation (if long enough) into
+ * the TicketSummary knowledge base, then deletes the raw chat document.
+ * This is called on both CLOSE and DELETE so no path leaves orphan data.
+ *
+ * @param {import('../models/Ticket.js').default} ticket
+ */
+const summarizeAndClean = async (ticket) => {
+  const chat = await Chat.findOne({
+    businessId: ticket.businessId,
+    visitorId: ticket.visitorId,
+  });
+
+  if (!chat) return;
+
+  const messages = chat.messages || [];
+
+  if (shouldSummarize(messages)) {
+    // Only summarize if we haven't already stored one for this ticket
+    const alreadySummarized = await TicketSummary.exists({ ticketId: ticket._id });
+
+    if (!alreadySummarized) {
+      const { problem, resolution, keywords } = await summarizeConversation(messages);
+
+      await TicketSummary.create({
+        businessId: ticket.businessId,
+        ticketId: ticket._id,
+        visitorId: ticket.visitorId,
+        problem,
+        resolution,
+        keywords,
+      });
+    }
+  }
+
+  // Always delete the raw chat to prevent orphaned data
+  await Chat.deleteOne({ _id: chat._id });
+};
 
 /**
  * @desc    Get all tickets for a business
@@ -21,7 +63,7 @@ export const updateTicketStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
   const ticket = await Ticket.findOne({ _id: id, businessId: req.user.id });
-  
+
   if (!ticket) {
     res.status(404);
     throw new Error('Ticket not found');
@@ -30,14 +72,17 @@ export const updateTicketStatus = asyncHandler(async (req, res) => {
   ticket.status = status;
   await ticket.save();
 
-  // Reset humanTakeover to false when ticket is closed or resolved
+  // On close: summarize conversation + clean up raw messages
+  if (status === 'closed') {
+    summarizeAndClean(ticket).catch(() => {});
+  }
+
+  // Regardless of status, reset human takeover flag
   if (status === 'closed' || status === 'resolved') {
-    import('../models/Chat.js').then(async ({ default: Chat }) => {
-      await Chat.findOneAndUpdate(
-        { businessId: ticket.businessId, visitorId: ticket.visitorId },
-        { $set: { humanTakeover: false } }
-      );
-    });
+    await Chat.findOneAndUpdate(
+      { businessId: ticket.businessId, visitorId: ticket.visitorId },
+      { $set: { humanTakeover: false } }
+    );
   }
 
   res.status(200).json({ success: true, data: ticket });
@@ -52,19 +97,14 @@ export const deleteTicket = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const ticket = await Ticket.findOne({ _id: id, businessId: req.user.id });
-  
+
   if (!ticket) {
     res.status(404);
     throw new Error('Ticket not found');
   }
 
-  // Reset humanTakeover to false when a ticket is deleted
-  import('../models/Chat.js').then(async ({ default: Chat }) => {
-    await Chat.findOneAndUpdate(
-      { businessId: ticket.businessId, visitorId: ticket.visitorId },
-      { $set: { humanTakeover: false } }
-    );
-  });
+  // Summarize + clean chat before removing ticket
+  await summarizeAndClean(ticket);
 
   await ticket.deleteOne();
 

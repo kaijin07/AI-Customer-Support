@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import gsap from 'gsap';
 import { X, Send, Bot, User, UserCheck } from 'lucide-react';
 import { io } from 'socket.io-client';
 import ticketService from '../../services/ticketService';
@@ -11,8 +11,8 @@ const ConversationView = ({ ticket, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [takeover, setTakeover] = useState(false);
   const [inputText, setInputText] = useState('');
-  const [socket, setSocket] = useState(null);
   const messagesEndRef = useRef(null);
+  const panelRef = useRef(null);
 
   useEffect(() => {
     const fetchChat = async () => {
@@ -36,7 +36,6 @@ const ConversationView = ({ ticket, onClose }) => {
     // Determine backend URL for socket
     const backendUrl = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
     const newSocket = io(backendUrl);
-    setSocket(newSocket);
 
     newSocket.emit('joinConversation', ticket.visitorId);
 
@@ -46,6 +45,15 @@ const ConversationView = ({ ticket, onClose }) => {
 
     return () => newSocket.close();
   }, [ticket.visitorId]);
+
+  useLayoutEffect(() => {
+    const el = panelRef.current;
+    if (!el) return undefined;
+    const ctx = gsap.context(() => {
+      gsap.from(el, { opacity: 0, scale: 0.95, duration: 0.35, ease: 'power3.out' });
+    }, el);
+    return () => ctx.revert();
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -92,10 +100,8 @@ const ConversationView = ({ ticket, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
+      <div
+        ref={panelRef}
         className="card p-0 w-full max-w-3xl bg-bg border border-border h-[80vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
@@ -129,8 +135,6 @@ const ConversationView = ({ ticket, onClose }) => {
           {messages.map((msg, idx) => {
             const isUser = msg.sender === 'user';
             const isAgent = msg.sender === 'agent';
-            const isBot = msg.sender === 'bot';
-
             return (
               <div key={idx} className={`flex ${isUser ? 'justify-start' : 'justify-end'}`}>
                 <div className={`max-w-[75%] rounded-lg p-3 ${
@@ -188,7 +192,7 @@ const ConversationView = ({ ticket, onClose }) => {
             </form>
           )}
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 };

@@ -1,10 +1,90 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import gsap from 'gsap';
 import { Send, ArrowLeft, Bot, User, Loader2, Info } from 'lucide-react';
 import { useChat } from '../hooks/useChat.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBotConfig } from '../hooks/useBotConfig.js';
+
+function ChatMessageBubble({ msg }) {
+  const ref = useRef(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const ctx = gsap.context(() => {
+      gsap.from(el, { opacity: 0, y: 10, scale: 0.95, duration: 0.2, ease: 'power2.out' });
+    }, el);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div
+      ref={ref}
+      className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+    >
+      <div className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+        <div
+          className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${
+            msg.sender === 'user'
+              ? 'bg-surface border border-border text-muted'
+              : 'bg-primary text-white shadow-lg shadow-primary/20'
+          }`}
+        >
+          {msg.sender === 'user' ? <User size={16} /> : <Bot size={16} />}
+        </div>
+        <div
+          className={`p-4 rounded-2xl ${
+            msg.sender === 'user'
+              ? 'bg-primary text-white rounded-tr-none shadow-lg shadow-primary/10'
+              : 'bg-surface border border-border text-text rounded-tl-none'
+          }`}
+        >
+          <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  const ref = useRef(null);
+
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const ctx = gsap.context(() => {
+      gsap.from(el, { opacity: 0, duration: 0.2 });
+    }, el);
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div ref={ref} className="flex justify-start">
+      <div className="flex gap-3 max-w-[80%]">
+        <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-white">
+          <Bot size={16} />
+        </div>
+        <div className="p-4 rounded-2xl bg-surface border border-border rounded-tl-none flex gap-1 items-center">
+          <span className="flex space-x-1">
+            <span
+              className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce"
+              style={{ animationDelay: '0ms' }}
+            ></span>
+            <span
+              className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce"
+              style={{ animationDelay: '150ms' }}
+            ></span>
+            <span
+              className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce"
+              style={{ animationDelay: '300ms' }}
+            ></span>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
@@ -21,16 +101,18 @@ const Chat = () => {
 
   useEffect(() => {
     if (botConfig?.botName && messages.length === 0) {
-      setMessages([{
-        sender: 'bot',
-        text: `Hi there! I'm ${botConfig.botName}, your virtual assistant. How can I help you today?`
-      }]);
+      setMessages([
+        {
+          sender: 'bot',
+          text: `Hi there! I'm ${botConfig.botName}, your virtual assistant. How can I help you today?`,
+        },
+      ]);
     }
   }, [botConfig, messages.length]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, loading]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -46,18 +128,20 @@ const Chat = () => {
         setMessages((prev) => [...prev, data.data]);
       }
     } catch (error) {
-      setMessages((prev) => [...prev, { sender: 'bot', text: 'Sorry, I am having trouble connecting right now.' }]);
+      setMessages((prev) => [
+        ...prev,
+        { sender: 'bot', text: 'Sorry, I am having trouble connecting right now.' },
+      ]);
     }
   };
 
   return (
     <div className="flex flex-col h-screen max-h-screen bg-bg w-full pt-20">
       <div className="w-full max-w-4xl mx-auto flex flex-col h-full glass rounded-t-lg overflow-hidden">
-        
-        {/* Chat Header */}
         <div className="flex items-center justify-between p-6 border-b border-border bg-surface/80 z-10 shrink-0">
           <div className="flex items-center gap-4">
-            <button 
+            <button
+              type="button"
               onClick={() => navigate('/dashboard')}
               className="p-2 rounded-full hover:bg-border text-muted hover:text-white transition-all"
             >
@@ -82,66 +166,24 @@ const Chat = () => {
           </div>
         </div>
 
-        {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-hide">
           {messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-muted space-y-4 opacity-50">
               <Bot size={64} className="animate-pulse" />
               <div className="text-center">
                 <p className="text-lg font-medium">Hello, {user?.name}!</p>
-                <p className="text-sm">I'm your AI agent. Send a message to start testing.</p>
+                <p className="text-sm">I&apos;m your AI agent. Send a message to start testing.</p>
               </div>
             </div>
           ) : (
-            <AnimatePresence initial={false}>
-              {messages.map((msg, index) => (
-                <motion.div 
-                  key={index}
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ duration: 0.2 }}
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex gap-3 max-w-[85%] ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-                    <div className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center ${msg.sender === 'user' ? 'bg-surface border border-border text-muted' : 'bg-primary text-white shadow-lg shadow-primary/20'}`}>
-                      {msg.sender === 'user' ? <User size={16} /> : <Bot size={16} />}
-                    </div>
-                    <div className={`p-4 rounded-2xl ${
-                      msg.sender === 'user' 
-                        ? 'bg-primary text-white rounded-tr-none shadow-lg shadow-primary/10' 
-                        : 'bg-surface border border-border text-text rounded-tl-none'
-                    }`}>
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+            messages.map((msg, index) => (
+              <ChatMessageBubble key={`${index}-${msg.text?.slice(0, 32)}`} msg={msg} />
+            ))
           )}
-          {loading && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex justify-start"
-            >
-               <div className="flex gap-3 max-w-[80%]">
-                 <div className="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center bg-primary text-white">
-                   <Bot size={16} />
-                 </div>
-                 <div className="p-4 rounded-2xl bg-surface border border-border rounded-tl-none flex gap-1 items-center">
-                   <span className="flex space-x-1">
-                     <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                     <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                     <span className="w-1.5 h-1.5 bg-muted rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                   </span>
-                 </div>
-               </div>
-            </motion.div>
-          )}
+          {loading && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Chat Input */}
         <div className="p-6 bg-surface/50 border-t border-border shrink-0">
           <form onSubmit={handleSend} className="flex gap-3 relative max-w-3xl mx-auto">
             <input
@@ -164,7 +206,6 @@ const Chat = () => {
             Powered by Hermes Intelligence
           </p>
         </div>
-
       </div>
     </div>
   );

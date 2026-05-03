@@ -41,6 +41,8 @@ const config = {
   apiUrl: process.env.API_URL || 'http://localhost:5000',
   groqApiKey: process.env.GROQ_API_KEY,
   googleClientId: process.env.GOOGLE_CLIENT_ID,
+  gmailUser: process.env.GMAIL_USER,
+  gmailAppPassword: process.env.GMAIL_APP_PASSWORD,
 };
 
 export default config;

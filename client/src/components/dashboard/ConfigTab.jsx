@@ -1,9 +1,41 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import gsap from 'gsap';
 import { Loader2, Plus, Trash2, FileText, Link as LinkIcon, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useGsapTabEnter } from '../../hooks/useGsapTabEnter';
+
+function FaqRow({ faq, onRemove }) {
+  const ref = useRef(null);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return undefined;
+    const ctx = gsap.context(() => {
+      gsap.from(el, { opacity: 0, duration: 0.35, ease: 'power2.out' });
+    }, el);
+    return () => ctx.revert();
+  }, []);
+  return (
+    <div
+      ref={ref}
+      className="flex justify-between items-start p-4 bg-bg rounded-md border border-border group"
+    >
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-white">Q: {faq.question}</p>
+        <p className="text-xs text-muted">A: {faq.answer}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-error opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-red-400"
+      >
+        <Trash2 size={16} />
+      </button>
+    </div>
+  );
+}
 
 const ConfigTab = ({ botConfig, updateBotConfig, fetchBotConfig, savingConfig }) => {
+  const rootRef = useGsapTabEnter({ opacity: 0, y: 20 });
   const [localConfig, setLocalConfig] = useState(botConfig || { faqs: [], knowledgeSources: { notionLinks: [] } });
   const [newFaq, setNewFaq] = useState({ question: '', answer: '' });
   const [pdfFile, setPdfFile] = useState(null);
@@ -98,27 +130,12 @@ const ConfigTab = ({ botConfig, updateBotConfig, fetchBotConfig, savingConfig })
   };
 
   return (
-    <motion.div 
-      key="config"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="space-y-8"
-    >
+    <div ref={rootRef} className="space-y-8">
       {/* Bot Identity */}
       <div className="card space-y-6">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-bold text-white">Bot Identity</h3>
-          <button 
-            onClick={handleSaveConfig}
-            disabled={savingConfig || !isDirty}
-            className="btn-primary py-1.5 px-6 text-sm"
-          >
-            {savingConfig ? <Loader2 size={16} className="animate-spin" /> : 'Save Changes'}
-          </button>
-        </div>
+        <h3 className="text-xl font-bold text-white">Bot Identity</h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted">Bot Name</label>
             <input 
@@ -131,12 +148,42 @@ const ConfigTab = ({ botConfig, updateBotConfig, fetchBotConfig, savingConfig })
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted">AI Instructions</label>
-            <textarea 
-              value={localConfig.instructions || ''}
-              onChange={(e) => handleChange('instructions', e.target.value)}
-              className="input-field h-11 resize-none" 
-              placeholder="Be helpful and professional..."
-            />
+            <div className="relative">
+              <textarea 
+                value={localConfig.instructions || ''}
+                onChange={(e) => handleChange('instructions', e.target.value)}
+                className="input-field resize-none min-h-[44px] w-full pb-4" 
+                placeholder="Be helpful and professional..."
+                style={{ minHeight: '44px' }}
+                ref={(el) => { if (el) el._textareaRef = true; }}
+                id="ai-instructions-textarea"
+              />
+              {/* Custom bottom-center resize handle */}
+              <div
+                className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-3 flex items-center justify-center cursor-s-resize group"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  const textarea = document.getElementById('ai-instructions-textarea');
+                  const startY = e.clientY;
+                  const startHeight = textarea.offsetHeight;
+                  const onMouseMove = (moveEvent) => {
+                    const newHeight = Math.max(44, startHeight + (moveEvent.clientY - startY));
+                    textarea.style.height = newHeight + 'px';
+                  };
+                  const onMouseUp = () => {
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                  };
+                  document.addEventListener('mousemove', onMouseMove);
+                  document.addEventListener('mouseup', onMouseUp);
+                }}
+              >
+                <svg width="16" height="4" viewBox="0 0 16 4" fill="none" className="text-muted group-hover:text-primary transition-colors">
+                  <rect x="0" y="0" width="16" height="1.5" rx="1" fill="currentColor" opacity="0.5"/>
+                  <rect x="0" y="2.5" width="16" height="1.5" rx="1" fill="currentColor" opacity="0.5"/>
+                </svg>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -229,28 +276,23 @@ const ConfigTab = ({ botConfig, updateBotConfig, fetchBotConfig, savingConfig })
 
           <div className="space-y-3 mt-6">
             {(localConfig.faqs || []).map((faq, index) => (
-              <motion.div 
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                key={index} 
-                className="flex justify-between items-start p-4 bg-bg rounded-md border border-border group"
-              >
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-white">Q: {faq.question}</p>
-                  <p className="text-xs text-muted">A: {faq.answer}</p>
-                </div>
-                <button 
-                  onClick={() => handleRemoveFaq(index)}
-                  className="text-error opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:text-red-400"
-                >
-                  <Trash2 size={16} />
-                </button>
-              </motion.div>
+              <FaqRow key={`${faq.question}-${index}`} faq={faq} onRemove={() => handleRemoveFaq(index)} />
             ))}
           </div>
         </div>
       </div>
-    </motion.div>
+
+      {/* Save Button */}
+      <div className="flex justify-end pt-2">
+        <button 
+          onClick={handleSaveConfig}
+          disabled={savingConfig || !isDirty}
+          className="btn-primary py-2.5 px-8 text-sm flex items-center gap-2"
+        >
+          {savingConfig ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : 'Save All Changes'}
+        </button>
+      </div>
+    </div>
   );
 };
 

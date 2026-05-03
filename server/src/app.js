@@ -18,6 +18,7 @@ import ticketRoutes from './routes/ticketRoutes.js';
 import embedRoutes from './routes/embedRoutes.js';
 import conversationRoutes from './routes/conversationRoutes.js';
 import messageRoutes from './routes/messageRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 
 const app = express();
 
@@ -59,6 +60,7 @@ app.use('/api/tickets', limiter, ticketRoutes);
 app.use('/api/conversations', limiter, conversationRoutes);
 app.use('/api/messages', limiter, messageRoutes);
 app.use('/api/embed', embedRoutes);
+app.use('/api/contact', limiter, contactRoutes);
 
 // Root API status route
 app.get('/', (req, res) => {

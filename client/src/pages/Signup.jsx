@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
-import { motion, AnimatePresence } from 'framer-motion';
-import { UserPlus, Loader2, Zap, Briefcase, Mail, Lock, User, X } from 'lucide-react';
+import gsap from 'gsap';
+import { UserPlus, Loader2, Briefcase, Mail, Lock, User, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth.js';
+import BrandLogo from '../components/BrandLogo.jsx';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -12,14 +13,18 @@ const Signup = () => {
     password: '',
     businessName: '',
   });
-  
-  // Google Modal State
+
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [googleCredential, setGoogleCredential] = useState(null);
   const [googleBusinessName, setGoogleBusinessName] = useState('');
 
   const { user, signup, googleLogin, loading, error, reset } = useAuth();
   const navigate = useNavigate();
+
+  const cardRef = useRef(null);
+  const errorBannerRef = useRef(null);
+  const modalBackdropRef = useRef(null);
+  const modalPanelRef = useRef(null);
 
   const { name, email, password, businessName } = formData;
 
@@ -32,6 +37,41 @@ const Signup = () => {
   useEffect(() => {
     return () => reset();
   }, [reset]);
+
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return undefined;
+    const ctx = gsap.context(() => {
+      gsap.from(el, { opacity: 0, y: 20, duration: 0.45, ease: 'power3.out' });
+    }, el);
+    return () => ctx.revert();
+  }, []);
+
+  useLayoutEffect(() => {
+    const banner = errorBannerRef.current;
+    if (!banner || !error) return undefined;
+    const ctx = gsap.context(() => {
+      gsap.from(banner, { opacity: 0, scale: 0.95, duration: 0.25, ease: 'power3.out' });
+    }, banner);
+    return () => ctx.revert();
+  }, [error]);
+
+  useLayoutEffect(() => {
+    if (!showGoogleModal) return undefined;
+    const backdrop = modalBackdropRef.current;
+    const panel = modalPanelRef.current;
+    const ctx = gsap.context(() => {
+      if (backdrop) gsap.fromTo(backdrop, { opacity: 0 }, { opacity: 1, duration: 0.25 });
+      if (panel) {
+        gsap.fromTo(
+          panel,
+          { scale: 0.95, opacity: 0, y: 20 },
+          { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'power3.out', delay: 0.05 }
+        );
+      }
+    });
+    return () => ctx.revert();
+  }, [showGoogleModal]);
 
   const onChange = (e) => {
     setFormData((prevState) => ({
@@ -46,7 +86,6 @@ const Signup = () => {
   };
 
   const onGoogleSuccess = async (response) => {
-    // If they already typed a business name in the main form, use it directly
     if (businessName.trim()) {
       try {
         await googleLogin(response.credential, businessName);
@@ -57,7 +96,6 @@ const Signup = () => {
         }
       }
     } else {
-      // Otherwise, show the modal to collect the business name
       setGoogleCredential(response.credential);
       setShowGoogleModal(true);
     }
@@ -77,35 +115,30 @@ const Signup = () => {
         <div className="absolute bottom-1/3 left-1/4 w-96 h-96 bg-accent opacity-5 blur-[120px] rounded-full"></div>
       </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-lg relative z-10"
-      >
+      <div ref={cardRef} className="w-full max-w-lg relative z-10">
         <div className="card glass p-8 md:p-12 shadow-2xl relative overflow-hidden">
           <div className="flex justify-center mb-8">
-            <div className="p-3 bg-primary rounded-xl shadow-lg shadow-primary/20">
-              <Zap size={32} className="text-white fill-current" />
-            </div>
+            <BrandLogo variant="auth" />
           </div>
 
           <h2 className="text-3xl font-bold text-center text-white mb-2">Create Your Account</h2>
           <p className="text-center text-muted text-sm mb-10">Join 500+ businesses automating their support.</p>
-          
+
           {error && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+            <div
+              ref={errorBannerRef}
               className="mb-8 p-4 text-xs font-medium text-center text-red-400 bg-red-400/10 border border-red-400/20 rounded-md"
             >
               {error.toString()}
-            </motion.div>
+            </div>
           )}
-          
+
           <form onSubmit={onSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="name">Full Name</label>
+                <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="name">
+                  Full Name
+                </label>
                 <div className="relative">
                   <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input
@@ -122,7 +155,12 @@ const Signup = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="businessName">Business Name</label>
+                <label
+                  className="text-xs font-semibold text-muted uppercase tracking-wider ml-1"
+                  htmlFor="businessName"
+                >
+                  Business Name
+                </label>
                 <div className="relative">
                   <Briefcase size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                   <input
@@ -141,7 +179,9 @@ const Signup = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="email">Work Email</label>
+              <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="email">
+                Work Email
+              </label>
               <div className="relative">
                 <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                 <input
@@ -159,7 +199,9 @@ const Signup = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="password">Password</label>
+              <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="password">
+                Password
+              </label>
               <div className="relative">
                 <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
                 <input
@@ -176,13 +218,15 @@ const Signup = () => {
               </div>
               <p className="text-[10px] text-muted ml-1">Must be at least 6 characters.</p>
             </div>
-            
-            <button 
-              type="submit" 
-              className="btn-primary w-full py-4 mt-4 flex justify-center items-center gap-2 text-lg" 
+
+            <button
+              type="submit"
+              className="btn-primary w-full py-4 mt-4 flex justify-center items-center gap-2 text-lg"
               disabled={loading}
             >
-              {loading ? <Loader2 size={24} className="animate-spin" /> : (
+              {loading ? (
+                <Loader2 size={24} className="animate-spin" />
+              ) : (
                 <>
                   <UserPlus size={24} />
                   Get Started
@@ -192,7 +236,9 @@ const Signup = () => {
           </form>
 
           <div className="my-10 flex items-center before:flex-1 before:border-t before:border-border after:flex-1 after:border-t after:border-border">
-            <span className="mx-4 text-[10px] text-muted font-bold uppercase tracking-widest text-center">Or fast-track with Google</span>
+            <span className="mx-4 text-[10px] text-muted font-bold uppercase tracking-widest text-center">
+              Or fast-track with Google
+            </span>
           </div>
 
           <div className="flex justify-center relative z-20">
@@ -205,7 +251,7 @@ const Signup = () => {
               text="signup_with"
             />
           </div>
-          
+
           <div className="mt-10 text-center text-sm">
             <span className="text-muted">Already have an account? </span>
             <Link to="/login" className="text-primary font-bold hover:underline">
@@ -213,63 +259,58 @@ const Signup = () => {
             </Link>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Google Business Name Modal */}
-      <AnimatePresence>
-        {showGoogleModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      {showGoogleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            ref={modalBackdropRef}
+            role="presentation"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowGoogleModal(false)}
+          />
+          <div
+            ref={modalPanelRef}
+            className="relative w-full max-w-md bg-surface border border-border p-8 rounded-2xl shadow-2xl z-10"
+          >
+            <button
+              type="button"
               onClick={() => setShowGoogleModal(false)}
-            />
-            <motion.div 
-              initial={{ scale: 0.95, opacity: 0, y: 20 }} 
-              animate={{ scale: 1, opacity: 1, y: 0 }} 
-              exit={{ scale: 0.95, opacity: 0, y: 20 }} 
-              className="relative w-full max-w-md bg-surface border border-border p-8 rounded-2xl shadow-2xl z-10"
+              className="absolute top-4 right-4 text-muted hover:text-white transition-colors p-2"
             >
-              <button 
-                onClick={() => setShowGoogleModal(false)}
-                className="absolute top-4 right-4 text-muted hover:text-white transition-colors p-2"
+              <X size={20} />
+            </button>
+
+            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary mb-6">
+              <Briefcase size={24} />
+            </div>
+
+            <h3 className="text-2xl font-bold text-white mb-2">One last step</h3>
+            <p className="text-muted text-sm mb-6">
+              What&apos;s the name of your business? We&apos;ll use this to personalize your AI agent.
+            </p>
+
+            <form onSubmit={handleGoogleSubmit} className="space-y-4">
+              <input
+                type="text"
+                value={googleBusinessName}
+                onChange={(e) => setGoogleBusinessName(e.target.value)}
+                placeholder="e.g. Acme Corporation"
+                className="input-field py-3"
+                autoFocus
+                required
+              />
+              <button
+                type="submit"
+                className="btn-primary w-full py-3 flex justify-center items-center gap-2"
+                disabled={loading}
               >
-                <X size={20} />
+                {loading ? <Loader2 size={20} className="animate-spin" /> : 'Complete Signup'}
               </button>
-              
-              <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center text-primary mb-6">
-                <Briefcase size={24} />
-              </div>
-              
-              <h3 className="text-2xl font-bold text-white mb-2">One last step</h3>
-              <p className="text-muted text-sm mb-6">
-                What's the name of your business? We'll use this to personalize your AI agent.
-              </p>
-              
-              <form onSubmit={handleGoogleSubmit} className="space-y-4">
-                <input
-                  type="text"
-                  value={googleBusinessName}
-                  onChange={(e) => setGoogleBusinessName(e.target.value)}
-                  placeholder="e.g. Acme Corporation"
-                  className="input-field py-3"
-                  autoFocus
-                  required
-                />
-                <button 
-                  type="submit" 
-                  className="btn-primary w-full py-3 flex justify-center items-center gap-2"
-                  disabled={loading}
-                >
-                  {loading ? <Loader2 size={20} className="animate-spin" /> : 'Complete Signup'}
-                </button>
-              </form>
-            </motion.div>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 };

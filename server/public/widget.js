@@ -190,7 +190,7 @@
       });
       const result = await response.json();
       if (result.success) {
-        addMessage(result.data.text, 'bot');
+        // Message will be added via socket listener to avoid duplicates
       }
     } catch (err) {
       console.error('Hermes Error:', err);
@@ -199,4 +199,29 @@
 
   sendBtn.onclick = sendMessage;
   input.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
+
+  // Real-time updates via Socket.io
+  const socketScript = document.createElement('script');
+  socketScript.src = "https://cdn.socket.io/4.7.2/socket.io.min.js";
+  document.head.appendChild(socketScript);
+
+  socketScript.onload = () => {
+    if (typeof io !== 'undefined') {
+      const socketBaseUrl = apiUrl.split('/api')[0].replace(/\/$/, '');
+      const socket = io(socketBaseUrl, {
+        transports: ['websocket', 'polling'],
+        reconnection: true
+      });
+
+      socket.on('connect', () => {
+        socket.emit('joinConversation', visitorId);
+      });
+
+      socket.on('newMessage', (msg) => {
+        if (msg.sender !== 'user') {
+          addMessage(msg.text, msg.sender === 'agent' ? 'bot' : msg.sender);
+        }
+      });
+    }
+  };
 })();

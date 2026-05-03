@@ -28,11 +28,34 @@
     box-sizing: border-box;
   }
 
+  html {
+    color-scheme: dark;
+  }
+
   html, body {
     @apply bg-bg text-text font-sans antialiased;
     font-family: var(--font-primary);
     margin: 0;
     overflow-x: hidden;
+  }
+
+  /* Override browser autofill (light/yellow-blue background) while keeping theme colors */
+  input:is(:-webkit-autofill, :autofill):not([readonly]),
+  textarea:is(:-webkit-autofill, :autofill):not([readonly]) {
+    -webkit-text-fill-color: var(--color-text);
+    caret-color: var(--color-text);
+    box-shadow: 0 0 0 1000px var(--color-surface) inset;
+    transition: background-color 99999s ease-out 0s;
+  }
+
+  input:is(:-webkit-autofill, :autofill):not([readonly]):hover,
+  textarea:is(:-webkit-autofill, :autofill):not([readonly]):hover {
+    box-shadow: 0 0 0 1000px var(--color-surface) inset;
+  }
+
+  input:is(:-webkit-autofill, :autofill):not([readonly]):focus,
+  textarea:is(:-webkit-autofill, :autofill):not([readonly]):focus {
+    box-shadow: 0 0 0 1000px var(--color-surface) inset;
   }
 
   h1,
@@ -46,6 +69,15 @@
 }
 
 @layer utilities {
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   .glass {
     @apply bg-surface/60 backdrop-blur-md border border-border;
   }
