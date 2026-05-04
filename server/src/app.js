@@ -62,21 +62,28 @@ const limiter = rateLimit({
 // In production restrict to the deployed CLIENT_URL only.
 const isDev = config.env !== 'production';
 
+// app.use(
+//   cors({
+//     origin: (origin, callback) => {
+//       // Allow requests with no origin (Postman, curl, server-to-server, mobile)
+//       if (!origin) return callback(null, true);
+//       // Dev: allow any localhost regardless of port
+//       if (isDev && /^https?:\/\/localhost(:\d+)?$/.test(origin)) {
+//         return callback(null, true);
+//       }
+//       // Production: allow only the configured client URL
+//       if (!isDev && config.clientUrl && origin === config.clientUrl) {
+//         return callback(null, true);
+//       }
+//       return callback(new Error(`CORS: origin ${origin} not allowed`));
+//     },
+//     credentials: true,
+//   })
+// );
+
 app.use(
   cors({
-    origin: (origin, callback) => {
-      // Allow requests with no origin (Postman, curl, server-to-server, mobile)
-      if (!origin) return callback(null, true);
-      // Dev: allow any localhost regardless of port
-      if (isDev && /^https?:\/\/localhost(:\d+)?$/.test(origin)) {
-        return callback(null, true);
-      }
-      // Production: allow only the configured client URL
-      if (!isDev && config.clientUrl && origin === config.clientUrl) {
-        return callback(null, true);
-      }
-      return callback(new Error(`CORS: origin ${origin} not allowed`));
-    },
+    origin: true,
     credentials: true,
   })
 );
