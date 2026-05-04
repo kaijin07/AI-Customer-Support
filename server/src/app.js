@@ -36,9 +36,10 @@ app.set('trust proxy', 1);
 
 // --- GLOBAL MIDDLEWARE ---
 
-// Security Headers — allow the widget script to be loaded cross-origin
+// Security Headers — configured to allow Google OAuth popups and cross-origin widget embedding
 app.use(
   helmet({
+    // Allows external sites to load your assets (fixes ORB errors)
     crossOriginResourcePolicy: { policy: 'cross-origin' },
     // Google OAuth Fix: Allow the popup to send messages back to the site
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
@@ -48,7 +49,14 @@ app.use(
   })
 );
 
-// Serve static public assets (widget.js etc.)
+// Explicitly serve the widget with the correct MIME type before general static middleware
+app.get('/widget.js', (req, res) => {
+  res.set('Content-Type', 'application/javascript');
+  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.sendFile(path.join(__dirname, 'public', 'widget.js'));
+});
+
+// Serve static public assets (images, fonts, etc.)
 app.use(express.static('public'));
 
 // Serve built React frontend
@@ -64,9 +72,7 @@ const limiter = rateLimit({
   },
 });
 
-// CORS — in development allow all localhost origins (Vite :5173 + Express :5000)
-const isDev = config.env !== 'production';
-
+// CORS Configuration
 app.use(
   cors({
     origin: true,
@@ -90,6 +96,7 @@ app.use('/api/embed', embedRoutes);
 app.use('/api/contact', limiter, contactRoutes);
 
 // --- SPA FALLBACK ---
+// Any route that doesn't match an API route serves the React index.html
 app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(DIST_PATH, 'index.html'));
 });
