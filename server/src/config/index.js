@@ -29,7 +29,11 @@ const config = {
   jwtSecret: process.env.JWT_SECRET,
   jwtExpire: process.env.JWT_EXPIRE || '30d',
   jwtCookieExpire: parseInt(process.env.JWT_COOKIE_EXPIRE) || 30,
-  clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  clientUrl: process.env.CLIENT_URL || (
+    process.env.NODE_ENV === 'production'
+      ? null
+      : 'http://localhost:5173'
+  ),
   apiUrl: process.env.API_URL || 'http://localhost:5000',
   groqApiKey: process.env.GROQ_API_KEY,
   googleClientId: process.env.GOOGLE_CLIENT_ID,
