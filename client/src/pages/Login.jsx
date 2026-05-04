@@ -183,14 +183,26 @@ const Login = () => {
           </div>
 
           <div className="flex justify-center">
-            <GoogleLogin
+
+
+            {/* <GoogleLogin
               onSuccess={onGoogleSuccess}
               onError={() => console.error('Google Login Failed')}
               theme="filled_black"
               shape="pill"
               width="100%"
             />
-          </div>
+          */}
+
+          <GoogleLogin
+            onSuccess={onGoogleSuccess}
+            onError={() => console.error('Google Signup Failed')}
+            theme="filled_black"
+            shape="pill"
+            width={300}   // ✅ number, not string
+           
+          />
+          </div> 
 
           <div className="mt-8 text-center text-sm">
             <span className="text-muted">Don&apos;t have an account? </span>

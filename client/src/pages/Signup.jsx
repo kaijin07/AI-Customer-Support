@@ -1,22 +1,30 @@
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { GoogleLogin } from '@react-oauth/google';
-import gsap from 'gsap';
-import { UserPlus, Loader2, Briefcase, Mail, Lock, User, X } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth.js';
-import BrandLogo from '../components/BrandLogo.jsx';
+import React, { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import gsap from "gsap";
+import {
+  UserPlus,
+  Loader2,
+  Briefcase,
+  Mail,
+  Lock,
+  User,
+  X,
+} from "lucide-react";
+import { useAuth } from "../hooks/useAuth.js";
+import BrandLogo from "../components/BrandLogo.jsx";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    businessName: '',
+    name: "",
+    email: "",
+    password: "",
+    businessName: "",
   });
 
   const [showGoogleModal, setShowGoogleModal] = useState(false);
   const [googleCredential, setGoogleCredential] = useState(null);
-  const [googleBusinessName, setGoogleBusinessName] = useState('');
+  const [googleBusinessName, setGoogleBusinessName] = useState("");
 
   const { user, signup, googleLogin, loading, error, reset } = useAuth();
   const navigate = useNavigate();
@@ -30,7 +38,7 @@ const Signup = () => {
 
   useEffect(() => {
     if (user) {
-      navigate('/dashboard');
+      navigate("/dashboard");
     }
   }, [user, navigate]);
 
@@ -42,7 +50,7 @@ const Signup = () => {
     const el = cardRef.current;
     if (!el) return undefined;
     const ctx = gsap.context(() => {
-      gsap.from(el, { opacity: 0, y: 20, duration: 0.45, ease: 'power3.out' });
+      gsap.from(el, { opacity: 0, y: 20, duration: 0.45, ease: "power3.out" });
     }, el);
     return () => ctx.revert();
   }, []);
@@ -51,7 +59,12 @@ const Signup = () => {
     const banner = errorBannerRef.current;
     if (!banner || !error) return undefined;
     const ctx = gsap.context(() => {
-      gsap.from(banner, { opacity: 0, scale: 0.95, duration: 0.25, ease: 'power3.out' });
+      gsap.from(banner, {
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.25,
+        ease: "power3.out",
+      });
     }, banner);
     return () => ctx.revert();
   }, [error]);
@@ -61,12 +74,20 @@ const Signup = () => {
     const backdrop = modalBackdropRef.current;
     const panel = modalPanelRef.current;
     const ctx = gsap.context(() => {
-      if (backdrop) gsap.fromTo(backdrop, { opacity: 0 }, { opacity: 1, duration: 0.25 });
+      if (backdrop)
+        gsap.fromTo(backdrop, { opacity: 0 }, { opacity: 1, duration: 0.25 });
       if (panel) {
         gsap.fromTo(
           panel,
           { scale: 0.95, opacity: 0, y: 20 },
-          { scale: 1, opacity: 1, y: 0, duration: 0.35, ease: 'power3.out', delay: 0.05 }
+          {
+            scale: 1,
+            opacity: 1,
+            y: 0,
+            duration: 0.35,
+            ease: "power3.out",
+            delay: 0.05,
+          },
         );
       }
     });
@@ -90,7 +111,7 @@ const Signup = () => {
       try {
         await googleLogin(response.credential, businessName);
       } catch (err) {
-        if (err.includes('BUSINESS_NAME_REQUIRED')) {
+        if (err.includes("BUSINESS_NAME_REQUIRED")) {
           setGoogleCredential(response.credential);
           setShowGoogleModal(true);
         }
@@ -121,8 +142,12 @@ const Signup = () => {
             <BrandLogo variant="auth" />
           </div>
 
-          <h2 className="text-3xl font-bold text-center text-white mb-2">Create Your Account</h2>
-          <p className="text-center text-muted text-sm mb-10">Join 500+ businesses automating their support.</p>
+          <h2 className="text-3xl font-bold text-center text-white mb-2">
+            Create Your Account
+          </h2>
+          <p className="text-center text-muted text-sm mb-10">
+            Join 500+ businesses automating their support.
+          </p>
 
           {error && (
             <div
@@ -136,17 +161,23 @@ const Signup = () => {
           <form onSubmit={onSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="name">
+                <label
+                  className="text-xs font-semibold text-muted uppercase tracking-wider ml-1"
+                  htmlFor="name"
+                >
                   Full Name
                 </label>
                 <div className="relative">
-                  <User size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <User
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                  />
                   <input
                     type="text"
                     id="name"
                     name="name"
                     className="input-field py-3 pl-10"
-                    style={{ paddingLeft: '2.5rem' }}
+                    style={{ paddingLeft: "2.5rem" }}
                     value={name}
                     onChange={onChange}
                     required
@@ -162,13 +193,16 @@ const Signup = () => {
                   Business Name
                 </label>
                 <div className="relative">
-                  <Briefcase size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                  <Briefcase
+                    size={18}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                  />
                   <input
                     type="text"
                     id="businessName"
                     name="businessName"
                     className="input-field py-3 pl-10"
-                    style={{ paddingLeft: '2.5rem' }}
+                    style={{ paddingLeft: "2.5rem" }}
                     value={businessName}
                     onChange={onChange}
                     required
@@ -179,17 +213,23 @@ const Signup = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="email">
+              <label
+                className="text-xs font-semibold text-muted uppercase tracking-wider ml-1"
+                htmlFor="email"
+              >
                 Work Email
               </label>
               <div className="relative">
-                <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <Mail
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                />
                 <input
                   type="email"
                   id="email"
                   name="email"
                   className="input-field py-3 pl-10"
-                  style={{ paddingLeft: '2.5rem' }}
+                  style={{ paddingLeft: "2.5rem" }}
                   value={email}
                   onChange={onChange}
                   required
@@ -199,24 +239,32 @@ const Signup = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-muted uppercase tracking-wider ml-1" htmlFor="password">
+              <label
+                className="text-xs font-semibold text-muted uppercase tracking-wider ml-1"
+                htmlFor="password"
+              >
                 Password
               </label>
               <div className="relative">
-                <Lock size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+                <Lock
+                  size={18}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted"
+                />
                 <input
                   type="password"
                   id="password"
                   name="password"
                   className="input-field py-3 pl-10"
-                  style={{ paddingLeft: '2.5rem' }}
+                  style={{ paddingLeft: "2.5rem" }}
                   value={password}
                   onChange={onChange}
                   required
                   placeholder="••••••••"
                 />
               </div>
-              <p className="text-[10px] text-muted ml-1">Must be at least 6 characters.</p>
+              <p className="text-[10px] text-muted ml-1">
+                Must be at least 6 characters.
+              </p>
             </div>
 
             <button
@@ -242,19 +290,33 @@ const Signup = () => {
           </div>
 
           <div className="flex justify-center relative z-20">
-            <GoogleLogin
+             {/* <GoogleLogin
               onSuccess={onGoogleSuccess}
-              onError={() => console.error('Google Signup Failed')}
+              onError={() => console.error("Google Signup Failed")}
               theme="filled_black"
               shape="pill"
               width="100%"
               text="signup_with"
-            />
+            />  */}
+          
+
+          <GoogleLogin
+            onSuccess={onGoogleSuccess}
+            onError={() => console.error("Google Signup Failed")}
+            theme="filled_black"
+            shape="pill"
+            width={300} // ✅ number, not string
+            text="signup_with" // optional, can remove if issues persist
+          />
+
           </div>
 
           <div className="mt-10 text-center text-sm">
             <span className="text-muted">Already have an account? </span>
-            <Link to="/login" className="text-primary font-bold hover:underline">
+            <Link
+              to="/login"
+              className="text-primary font-bold hover:underline"
+            >
               Sign in here
             </Link>
           </div>
@@ -285,9 +347,12 @@ const Signup = () => {
               <Briefcase size={24} />
             </div>
 
-            <h3 className="text-2xl font-bold text-white mb-2">One last step</h3>
+            <h3 className="text-2xl font-bold text-white mb-2">
+              One last step
+            </h3>
             <p className="text-muted text-sm mb-6">
-              What&apos;s the name of your business? We&apos;ll use this to personalize your AI agent.
+              What&apos;s the name of your business? We&apos;ll use this to
+              personalize your AI agent.
             </p>
 
             <form onSubmit={handleGoogleSubmit} className="space-y-4">
@@ -305,7 +370,11 @@ const Signup = () => {
                 className="btn-primary w-full py-3 flex justify-center items-center gap-2"
                 disabled={loading}
               >
-                {loading ? <Loader2 size={20} className="animate-spin" /> : 'Complete Signup'}
+                {loading ? (
+                  <Loader2 size={20} className="animate-spin" />
+                ) : (
+                  "Complete Signup"
+                )}
               </button>
             </form>
           </div>
