@@ -91,7 +91,8 @@ const Home = () => {
       <div
         className="fixed inset-0 pointer-events-none z-0 opacity-[0.02]"
         style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+          backgroundImage:
+            'radial-gradient(circle at 1px 1px, rgba(244,244,245,0.08) 1px, transparent 0)',
           backgroundSize: '40px 40px',
         }}
       />
@@ -106,7 +107,7 @@ const Home = () => {
           <div className="absolute -inset-px rounded-2xl bg-linear-to-b from-primary/25 via-transparent to-accent/15 opacity-40 blur-xl pointer-events-none" />
 
           {/* Mirrors pages/Dashboard.jsx + Sidebar + TicketsTab empty state */}
-          <div className="relative rounded-2xl border border-border/90 bg-bg overflow-hidden shadow-[0_24px_64px_-12px_rgba(0,0,0,0.55)] ring-1 ring-white/[0.06]">
+          <div className="relative rounded-2xl border border-border/90 bg-bg overflow-hidden shadow-[0_24px_64px_-12px_rgba(0,0,0,0.55)] ring-1 ring-border/40">
             <div className="flex flex-col md:flex-row w-full min-h-[260px] sm:min-h-[320px]">
               <aside className="w-full md:w-56 lg:w-64 shrink-0 border-b md:border-b-0 md:border-r border-border p-3 sm:p-4 space-y-1.5 sm:space-y-2 md:space-y-2 bg-bg">
                 <div className="mb-4 sm:mb-6 md:mb-8 px-2 md:px-4 pt-1">
@@ -117,15 +118,18 @@ const Home = () => {
                   { id: 'config', name: 'Bot Config', Icon: Settings, active: false },
                   { id: 'tickets', name: 'Tickets', Icon: TicketIcon, active: true },
                   { id: 'embed', name: 'Embed Widget', Icon: Code, active: false },
-                ].map(({ name, Icon, active }) => (
+                ].map((nav) => {
+                  const NavIcon = nav.Icon;
+                  return (
                   <div
-                    key={name}
-                    className={`flex w-full items-center gap-3 px-3 sm:px-4 py-2.5 rounded-md text-sm font-medium cursor-default ${active ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted'}`}
+                    key={nav.id}
+                    className={`flex w-full items-center gap-3 px-3 sm:px-4 py-2.5 rounded-md text-sm font-medium cursor-default ${nav.active ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-muted'}`}
                   >
-                    <Icon size={18} className={active ? 'shrink-0 opacity-95' : 'shrink-0 opacity-85'} aria-hidden />
-                    <span>{name}</span>
+                    <NavIcon size={18} className={nav.active ? 'shrink-0 opacity-95' : 'shrink-0 opacity-85'} aria-hidden />
+                    <span>{nav.name}</span>
                   </div>
-                ))}
+                  );
+                })}
               </aside>
 
               <div className="flex-1 min-w-0 flex flex-col p-4 sm:p-6 md:p-8 lg:p-10 overflow-auto">
@@ -314,7 +318,7 @@ const Home = () => {
               className="absolute inset-0 opacity-[0.03]"
               style={{
                 backgroundImage:
-                  'linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px)',
+                  'linear-gradient(rgba(244,244,245,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(244,244,245,0.06) 1px, transparent 1px)',
                 backgroundSize: '30px 30px',
               }}
             />
@@ -327,7 +331,7 @@ const Home = () => {
 
             <Link
               to="/signup"
-              className="relative z-10 inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-semibold rounded-full hover:scale-105 transition-transform"
+              className="relative z-10 inline-flex items-center gap-2 rounded-full px-6 py-3 font-semibold text-white shadow-[0_0_24px_rgba(109,103,200,0.35)] transition-transform bg-primary hover:scale-105 hover:bg-primary-hover"
             >
               Start your free trial
               <ArrowRight size={16} />

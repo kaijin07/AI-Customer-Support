@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from './context/ThemeContext.jsx';
 import Navbar from './components/Navbar.jsx';
 import ScrollToTop from './components/ScrollToTop.jsx';
+import PageLoader from './components/PageLoader.jsx';
 import { useAuth } from './hooks/useAuth.js';
 import { Toaster } from 'react-hot-toast';
 
@@ -67,13 +67,12 @@ const AppContent = () => {
 
 function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <ScrollToTop />
-        <Toaster position="top-right" />
-        <AppContent />
-      </Router>
-    </ThemeProvider>
+    <Router>
+      <PageLoader />
+      <ScrollToTop />
+      <Toaster position="top-right" />
+      <AppContent />
+    </Router>
   );
 }
 

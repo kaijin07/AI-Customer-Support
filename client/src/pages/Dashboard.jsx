@@ -45,7 +45,7 @@ const Dashboard = () => {
 
     socket.emit('joinConversation', user._id); // Join business room (reusing the same event name for now)
 
-    socket.on('newTicket', (newTicket) => {
+    socket.on('newTicket', () => {
       toast.success('New ticket received!');
       fetchTickets(); // Refresh tickets list
     });

@@ -208,7 +208,7 @@ export default function HomeHero() {
     gsap.to(ctaSecondaryRef.current, {
       scale: 1,
       y: 0,
-      borderColor: '#1f2937',
+      borderColor: 'var(--color-border)',
       duration: 0.32,
       ease: 'power3.out',
     });
@@ -233,25 +233,23 @@ export default function HomeHero() {
           </aside>
 
           <div className="lg:col-span-6 flex flex-col items-center text-center w-full max-w-xl mx-auto lg:mx-auto px-1 sm:px-2 pointer-events-none">
-            <div className="hero-intro-badge pointer-events-auto inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-surface/90 border border-border/70 text-muted text-[11px] sm:text-xs font-medium mb-7 sm:mb-9 backdrop-blur-md shadow-sm">
+            <div className="hero-intro-badge group/badge pointer-events-auto mb-7 inline-flex items-center gap-2.5 rounded-full border border-border/70 bg-surface/90 px-4 py-2 text-[11px] font-medium text-muted shadow-sm backdrop-blur-md transition-[border-color,box-shadow,transform] duration-300 sm:mb-9 sm:text-xs md:hover:-translate-y-0.5 md:hover:border-primary/35 md:hover:shadow-[0_8px_28px_rgba(99,102,241,0.12)]">
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-60" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-accent shadow-[0_0_12px_var(--color-accent)]" />
               </span>
-              <span className="tracking-wide uppercase font-semibold text-[11px] sm:text-xs leading-tight">
+              <span className="text-[11px] font-semibold uppercase leading-tight tracking-wide transition-[letter-spacing,color] duration-300 sm:text-xs md:group-hover/badge:tracking-[0.12em] md:group-hover/badge:text-text">
                 AI-powered customer support
               </span>
             </div>
 
-            <h1 className="hero-intro-title-line font-sans text-[2rem] leading-[1.12] sm:text-4xl sm:leading-[1.1] md:text-5xl md:leading-[1.08] font-extrabold tracking-[-0.025em] text-white mb-6 sm:mb-8">
+            <h1 className="hero-intro-title-line pointer-events-auto text-hover-pop mb-6 font-sans text-[2rem] font-extrabold leading-[1.12] tracking-[-0.025em] text-text sm:mb-8 sm:text-4xl sm:leading-[1.1] md:text-5xl md:leading-[1.08]">
               Smarter replies,{' '}
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-primary via-[#818cf8] to-accent">
-                happier customers
-              </span>
+              <span className="text-shimmer-hover">happier customers</span>
               .
             </h1>
 
-            <p className="hero-intro-sub text-[15px] sm:text-base md:text-lg text-muted/95 mb-9 sm:mb-11 max-w-[22rem] sm:max-w-lg mx-auto font-normal leading-relaxed pointer-events-auto">
+            <p className="hero-intro-sub pointer-events-auto mx-auto mb-9 max-w-[22rem] text-[15px] font-normal leading-relaxed text-muted/95 transition-[color,transform] duration-300 hover:text-text/90 sm:mb-11 sm:max-w-lg sm:text-base md:text-lg md:hover:-translate-y-0.5">
               Deploy Hermes on your site in minutes. Train once from your docs and tickets — visitors get
               accurate, on-brand answers 24/7.
             </p>
@@ -272,7 +270,7 @@ export default function HomeHero() {
                 to="/about"
                 onMouseEnter={onSecondaryEnter}
                 onMouseLeave={onSecondaryLeave}
-                className="min-h-[48px] sm:min-h-[44px] inline-flex items-center justify-center gap-2 rounded-xl px-6 sm:px-7 py-3.5 bg-surface/95 hover:bg-surface border border-border text-white text-[15px] font-semibold tracking-[-0.01em] will-change-transform backdrop-blur-sm transition-colors duration-200"
+                className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-border bg-surface/95 px-6 py-3.5 text-[15px] font-semibold tracking-[-0.01em] text-text backdrop-blur-sm transition-colors duration-200 will-change-transform hover:bg-surface sm:min-h-[44px] sm:px-7"
               >
                 <MessageCircle size={18} className="text-accent shrink-0" aria-hidden />
                 See it in action
@@ -310,9 +308,11 @@ export default function HomeHero() {
           { icon: Zap, stat: '<1 min', label: 'To your first reply' },
           { icon: TrendingUp, stat: '80%+', label: 'Issues auto-resolved' },
           { icon: Shield, stat: '99.9%', label: 'Uptime you can rely on' },
-        ].map(({ icon: Icon, stat, label }, i) => (
+        ].map((row, i) => {
+          const StatIcon = row.icon;
+          return (
           <div
-            key={label}
+            key={row.label}
             className="hero-stat-card group relative overflow-hidden rounded-2xl bg-surface/75 border border-border/70 px-5 py-5 sm:px-6 sm:py-5 md:py-6 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.18)] transition-[transform,border-color] duration-300 active:scale-[0.99] sm:hover:-translate-y-1 sm:hover:border-primary/35 sm:hover:shadow-[0_12px_36px_rgba(99,102,241,0.14)] cursor-default"
             onMouseEnter={(e) => {
               if (window.matchMedia('(hover: hover)').matches) {
@@ -336,15 +336,18 @@ export default function HomeHero() {
             <div className="absolute inset-0 bg-linear-to-br from-primary/5 to-transparent opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             <div className="flex items-start gap-3 sm:gap-4 relative">
               <div className="stat-icon-wrap shrink-0 p-2.5 rounded-xl bg-primary/12 text-primary border border-primary/20">
-                <Icon size={20} className="sm:w-[22px] sm:h-[22px]" />
+                <StatIcon size={20} className="sm:w-[22px] sm:h-[22px]" />
               </div>
               <div className="text-left min-w-0 flex-1">
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight">{stat}</p>
-                <p className="text-[13px] sm:text-sm text-muted font-medium mt-1 leading-snug">{label}</p>
+                <p className="text-lg font-bold tracking-tight text-text sm:text-xl md:text-2xl">{row.stat}</p>
+                <p className="mt-1 text-[13px] font-medium leading-snug text-muted transition-colors duration-300 group-hover:text-primary sm:text-sm">
+                  {row.label}
+                </p>
               </div>
             </div>
           </div>
-        ))}
+        );
+        })}
       </div>
     </section>
   );

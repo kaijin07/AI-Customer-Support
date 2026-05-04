@@ -101,7 +101,7 @@ const TicketsTab = ({ tickets, updateTicket, fetchTickets }) => {
                 <button
                   type="button"
                   onClick={() => setSelectedTicket(ticket)}
-                  className="w-full py-3 mt-auto rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-black font-semibold transition-colors flex items-center justify-center gap-2 text-sm"
+                  className="mt-auto flex w-full items-center justify-center gap-2 rounded-lg bg-primary/10 py-3 text-sm font-semibold text-primary transition-colors hover:bg-primary hover:text-white"
                 >
                   <MessageSquare size={16} />
                   View Conversation

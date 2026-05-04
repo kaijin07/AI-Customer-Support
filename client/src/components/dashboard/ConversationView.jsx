@@ -6,7 +6,6 @@ import ticketService from '../../services/ticketService';
 import toast from 'react-hot-toast';
 
 const ConversationView = ({ ticket, onClose }) => {
-  const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [takeover, setTakeover] = useState(false);
@@ -19,7 +18,6 @@ const ConversationView = ({ ticket, onClose }) => {
       try {
         const res = await ticketService.getConversation(ticket.visitorId);
         if (res.success) {
-          setConversation(res.data);
           setMessages(res.data.messages);
           setTakeover(res.data.humanTakeover || false);
         }
@@ -107,7 +105,7 @@ const ConversationView = ({ ticket, onClose }) => {
         {/* Header */}
         <div className="p-4 border-b border-border flex justify-between items-center bg-surface">
           <div>
-            <h3 className="font-bold text-white flex items-center gap-2">
+            <h3 className="flex items-center gap-2 font-bold text-text">
               Conversation with {ticket.userName || 'Visitor'}
             </h3>
             <p className="text-xs text-muted">Ticket ID: {ticket._id}</p>
@@ -121,10 +119,15 @@ const ConversationView = ({ ticket, onClose }) => {
                 className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${takeover ? 'bg-primary' : 'bg-muted'}`}
                 onClick={handleTakeoverToggle}
               >
-                <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${takeover ? 'translate-x-5' : 'translate-x-1'}`} />
+                <span
+                  className={`inline-block h-3 w-3 transform rounded-full bg-text transition-transform ${takeover ? 'translate-x-5' : 'translate-x-1'}`}
+                />
               </div>
             </label>
-            <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full text-muted hover:text-white transition-colors">
+            <button
+              onClick={onClose}
+              className="rounded-full p-1 text-muted transition-colors hover:bg-border hover:text-text"
+            >
               <X size={20} />
             </button>
           </div>
@@ -137,11 +140,15 @@ const ConversationView = ({ ticket, onClose }) => {
             const isAgent = msg.sender === 'agent';
             return (
               <div key={idx} className={`flex ${isUser ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-[75%] rounded-lg p-3 ${
-                  isUser ? 'bg-surface text-white border border-border' : 
-                  isAgent ? 'bg-primary/20 text-white border border-primary/30' : 
-                  'bg-white/5 text-white border border-white/10'
-                }`}>
+                <div
+                  className={`max-w-[75%] rounded-lg border p-3 ${
+                    isUser
+                      ? 'border-border bg-surface text-text'
+                      : isAgent
+                        ? 'border-primary/30 bg-primary/20 text-text'
+                        : 'border-border/80 bg-border/30 text-text'
+                  }`}
+                >
                   <div className="flex items-center gap-1 mb-1 opacity-70">
                     {isUser ? <User size={12} /> : isAgent ? <UserCheck size={12} className="text-primary" /> : <Bot size={12} />}
                     <span className="text-[10px] uppercase tracking-wider font-semibold">
@@ -180,12 +187,12 @@ const ConversationView = ({ ticket, onClose }) => {
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Type your message as an agent..." 
-                className="flex-1 bg-bg border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
+                className="flex-1 rounded-lg border border-border bg-bg px-4 py-2 text-text transition-colors focus:border-primary focus:outline-none"
               />
               <button 
                 type="submit"
                 disabled={!inputText.trim()}
-                className="bg-primary hover:bg-primary-hover text-black p-2 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="flex items-center justify-center rounded-lg bg-primary p-2 px-4 font-medium text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Send size={18} />
               </button>

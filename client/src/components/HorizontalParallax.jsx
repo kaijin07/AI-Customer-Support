@@ -1,8 +1,6 @@
 import React, { useRef, useLayoutEffect } from 'react';
-import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { ArrowRight } from 'lucide-react';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -43,7 +41,7 @@ function ReducedMotionStory({
       </div>
       <div className="relative z-10 px-[8vw] mb-12">
         <p className="text-xs tracking-[0.2em] text-muted uppercase mb-4">— {storyKicker}</p>
-        <h2 className="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-4 leading-[1.05]">
+        <h2 className="mb-4 text-4xl font-extrabold leading-[1.05] tracking-tight text-text md:text-5xl">
           {headlineTop}
           <br />
           <span className="text-accent">{headlineAccent}</span>
@@ -57,8 +55,8 @@ function ReducedMotionStory({
           </div>
         ))}
         <div className="shrink-0 w-[min(85vw,380px)] flex flex-col justify-center snap-start border-l border-border/40 pl-10">
-          <span className="text-accent text-sm font-medium mb-3 tracking-wide">{ctaEyebrow}</span>
-          <p className="text-2xl font-bold text-white leading-tight">{ctaHeadline}</p>
+          <span className="mb-3 text-sm font-medium tracking-wide text-accent">{ctaEyebrow}</span>
+          <p className="text-2xl font-bold leading-tight text-text">{ctaHeadline}</p>
         </div>
       </div>
     </section>
@@ -186,7 +184,7 @@ const HorizontalParallax = ({
         style={{ paddingLeft: '8vw', paddingRight: '8vw' }}
       >
         <div className="pointer-events-auto flex shrink-0 w-[min(92vw,480px)] md:w-[min(40vw,520px)] max-h-full flex-col justify-center self-center pr-4 md:pr-12 min-h-0 py-2">
-          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[0.98] tracking-tight text-white">
+          <h2 className="text-hover-pop text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold leading-[0.98] tracking-tight text-text">
             {headlineTop} <br />
             <span className="text-accent">{headlineAccent}</span>
           </h2>
@@ -208,14 +206,7 @@ const HorizontalParallax = ({
 
         <div className="pointer-events-auto flex shrink-0 w-[min(88vw,440px)] md:max-w-md max-h-[min(380px,calc(100svh-9rem))] flex-col justify-center self-center border-l border-border/40 pl-8 md:pl-14 overflow-y-auto scrollbar-hide min-h-0 py-2">
           <span className="text-accent text-sm font-medium mb-4 tracking-wide">{ctaEyebrow}</span>
-          <p className="text-3xl md:text-4xl font-bold text-white mb-8 leading-tight">{ctaHeadline}</p>
-          <Link
-            to="/signup"
-            className="inline-flex items-center gap-2 w-fit px-6 py-3 rounded-full bg-white text-black font-semibold hover:scale-[1.02] transition-transform"
-          >
-            Get started free
-            <ArrowRight size={18} />
-          </Link>
+          <p className="text-hover-pop text-3xl md:text-4xl font-bold leading-tight text-text">{ctaHeadline}</p>
         </div>
       </div>
     </section>

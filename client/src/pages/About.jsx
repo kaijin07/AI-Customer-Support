@@ -1,9 +1,12 @@
 import React, { useRef, useLayoutEffect, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { Bot, Shield, Zap, Target, Users, Cpu, ArrowRight } from 'lucide-react';
+import { Shield, Zap, Target, Users, Cpu, ArrowRight } from 'lucide-react';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { Link } from 'react-router-dom';
+import BrandLogo from '../components/BrandLogo.jsx';
+import { GithubMark, LinkedinMark } from '../components/SocialBrandIcons.jsx';
+import { ABOUT_TEAM } from '../data/aboutTeam.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,10 +18,12 @@ const About = () => {
   const missionReveal = useScrollReveal({ margin: '-200px' });
   const visionReveal = useScrollReveal({ margin: '-200px' });
   const techReveal = useScrollReveal();
+  const teamReveal = useScrollReveal();
 
   const missionDone = useRef(false);
   const visionDone = useRef(false);
   const techDone = useRef(false);
+  const teamDone = useRef(false);
 
   useLayoutEffect(() => {
     const root = rootRef.current;
@@ -76,6 +81,11 @@ const About = () => {
       { opacity: 0, y: 20 },
       { opacity: 1, y: 0, duration: 1, ease: 'power3.out', delay: 0.2 }
     );
+    gsap.fromTo(
+      '.about-intro-logo',
+      { opacity: 0, y: 16, scale: 0.98 },
+      { opacity: 1, y: 0, scale: 1, duration: 1, ease: 'power3.out', delay: 0.08 }
+    );
   }, []);
 
   useEffect(() => {
@@ -108,6 +118,20 @@ const About = () => {
     });
   }, [techReveal.isInView]);
 
+  useEffect(() => {
+    if (!teamReveal.isInView || teamDone.current) return;
+    const grid = teamReveal.ref.current?.querySelector('[data-team-grid]');
+    if (!grid?.children?.length) return;
+    teamDone.current = true;
+    gsap.from(grid.children, {
+      opacity: 0,
+      y: 36,
+      duration: 0.75,
+      stagger: 0.12,
+      ease: 'power3.out',
+    });
+  }, [teamReveal.isInView]);
+
   return (
     <div ref={rootRef} className="flex-1 w-full bg-bg pt-32 pb-24 overflow-hidden text-text relative">
       <div
@@ -120,10 +144,19 @@ const About = () => {
       </div>
 
       <section className="relative min-h-[70vh] flex flex-col justify-center items-center text-center px-4 z-10">
-        <div ref={introWrapRef} className="max-w-4xl mx-auto">
+        <div
+          ref={introWrapRef}
+          className="mx-auto flex w-full max-w-4xl flex-col items-center text-center px-4 sm:px-6"
+        >
+          <div className="about-intro-logo mb-8 flex w-full max-w-2xl justify-center md:mb-10">
+            <BrandLogo
+              variant="about"
+              className="drop-shadow-[0_12px_48px_rgba(109,103,200,0.2)]"
+            />
+          </div>
           <h1 className="about-intro-title text-4xl md:text-6xl font-extrabold mb-6 tracking-tight">
             The Future of <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-accent">
+            <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-primary-hover">
               Human-Bot
             </span>{' '}
             Collaboration
@@ -150,11 +183,11 @@ const About = () => {
               </p>
               <div className="flex gap-8 pt-4">
                 <div className="border-l-2 border-primary pl-6">
-                  <p className="text-4xl font-black text-white mb-1">99%</p>
+                  <p className="text-4xl font-black text-text mb-1">99%</p>
                   <p className="text-sm text-muted font-medium uppercase tracking-widest">Uptime SLA</p>
                 </div>
                 <div className="border-l-2 border-accent pl-6">
-                  <p className="text-4xl font-black text-white mb-1">24/7</p>
+                  <p className="text-4xl font-black text-text mb-1">24/7</p>
                   <p className="text-sm text-muted font-medium uppercase tracking-widest">Instant Support</p>
                 </div>
               </div>
@@ -163,7 +196,9 @@ const About = () => {
               <div className="absolute inset-0 bg-surface/40 backdrop-blur-md border border-border/50 rounded-4xl z-10" />
               <img
                 src="https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=2070&auto=format&fit=crop"
-                alt="Support Team"
+                alt="Support team collaborating in an office"
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 w-full h-full object-cover opacity-30 group-hover:scale-105 transition-transform duration-1000 ease-out"
               />
               <div className="absolute inset-0 bg-linear-to-t from-bg via-transparent to-transparent z-20" />
@@ -180,13 +215,15 @@ const About = () => {
           <div data-vision-block className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="relative h-[400px] lg:h-[600px] w-full rounded-4xl overflow-hidden group">
               <div className="absolute inset-0 bg-surface/40 backdrop-blur-md border border-border/50 rounded-4xl z-10" />
-              <div className="absolute inset-0 flex items-center justify-center z-20">
-                <Bot
-                  size={150}
-                  className="text-accent opacity-20 group-hover:scale-110 group-hover:opacity-40 transition-all duration-1000 ease-out"
-                />
-              </div>
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,var(--color-accent)_0%,transparent_70%)] opacity-5 z-0" />
+              <img
+                src="https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=2070&auto=format&fit=crop"
+                alt="Abstract visualization suggesting AI and human collaboration"
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover opacity-35 group-hover:scale-105 transition-transform duration-1000 ease-out"
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-bg via-bg/40 to-transparent z-20" />
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,var(--color-accent)_0%,transparent_55%)] opacity-[0.07] z-[15]" />
             </div>
 
             <div className="space-y-8">
@@ -200,7 +237,7 @@ const About = () => {
               </p>
               <Link
                 to="/contact"
-                className="inline-flex items-center gap-2 text-accent hover:text-white font-bold tracking-wide transition-colors group"
+                className="group inline-flex items-center gap-2 font-bold tracking-wide text-accent transition-colors hover:text-text"
               >
                 Partner with us
                 <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -247,6 +284,73 @@ const About = () => {
                 <h3 className="text-2xl font-bold mb-4">{v.title}</h3>
                 <p className="text-muted leading-relaxed font-light">{v.desc}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section
+        className="relative w-full py-24 md:py-32 px-4 z-10 border-t border-border/40 bg-surface/25"
+        ref={teamReveal.ref}
+      >
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14 md:mb-16 max-w-2xl mx-auto">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary mb-3">People</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">The team behind Hermes AI</h2>
+            <p className="text-muted font-light leading-relaxed">
+              Engineers and designers shipping reliable AI support—reach out on GitHub or LinkedIn.
+            </p>
+          </div>
+
+          <div data-team-grid className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 items-stretch">
+            {ABOUT_TEAM.map((member) => (
+              <article
+                key={member.id}
+                className={`relative flex flex-col rounded-3xl border bg-surface/60 p-8 backdrop-blur-sm transition-shadow duration-300 hover:shadow-[0_20px_50px_-20px_rgba(0,0,0,0.5)] ${
+                  member.lead
+                    ? 'border-primary/40 shadow-[0_0_0_1px_rgba(99,102,241,0.12)] lg:ring-1 lg:ring-primary/25'
+                    : 'border-border/60 hover:border-border'
+                }`}
+              >
+                {member.lead ? (
+                  <span className="absolute top-5 right-5 rounded-full bg-primary/15 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
+                    Lead
+                  </span>
+                ) : null}
+                <div
+                  className="mb-5 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-primary/90 to-accent/80 text-lg font-bold text-white shadow-md"
+                  aria-hidden
+                >
+                  {member.initials}
+                </div>
+                <h3 className="mb-1 text-xl font-bold text-text">{member.name}</h3>
+                {member.role ? (
+                  <p className="text-sm font-medium text-primary/90 mb-1">{member.role}</p>
+                ) : null}
+                <p className={`text-sm text-muted leading-relaxed mb-6 flex-1 ${member.role ? '' : 'mt-1'}`}>
+                  {member.focus}
+                </p>
+                <div className="flex flex-wrap gap-3 pt-1 border-t border-border/50">
+                  <a
+                    href={member.github}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-bg/40 px-3 py-2 text-sm text-muted transition-colors hover:border-primary/40 hover:text-text"
+                  >
+                    <GithubMark size={18} className="text-text/90" />
+                    GitHub
+                  </a>
+                  <a
+                    href={member.linkedin}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-border/70 bg-bg/40 px-3 py-2 text-sm text-muted transition-colors hover:border-accent/40 hover:text-text"
+                  >
+                    <LinkedinMark size={18} className="text-primary/90" />
+                    LinkedIn
+                  </a>
+                </div>
+              </article>
             ))}
           </div>
         </div>

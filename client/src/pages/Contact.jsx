@@ -227,11 +227,11 @@ const Contact = () => {
                   disabled={loading}
                   className="relative w-full overflow-hidden bg-primary text-white font-bold py-5 rounded-xl group transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(99,102,241,0.2)] hover:shadow-[0_0_40px_rgba(99,102,241,0.5)]"
                 >
-                  <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out" />
+                  <div className="absolute inset-0 translate-y-full bg-primary-hover/30 transition-transform duration-300 ease-out group-hover:translate-y-0" />
 
                   <div className="relative z-10 flex items-center justify-center gap-3 text-lg">
                     {loading ? (
-                      <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span className="h-6 w-6 animate-spin rounded-full border-2 border-text/25 border-t-text" />
                     ) : (
                       <>
                         Send Inquiry
