@@ -30,12 +30,18 @@ const DIST_PATH = path.join(__dirname, '..', '..', 'client', 'dist');
 
 const app = express();
 
+// --- PROXY TRUST ---
+// This fix allows express-rate-limit to see the real user IP on Render
+app.set('trust proxy', 1);
+
 // --- GLOBAL MIDDLEWARE ---
 
 // Security Headers — allow the widget script to be loaded cross-origin
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
+    // Google OAuth Fix: Allow the popup to send messages back to the site
+    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
     // In monolith mode we serve the React SPA, so disable the default
     // contentSecurityPolicy to avoid breaking the frontend.
     contentSecurityPolicy: false,
@@ -59,27 +65,7 @@ const limiter = rateLimit({
 });
 
 // CORS — in development allow all localhost origins (Vite :5173 + Express :5000)
-// In production restrict to the deployed CLIENT_URL only.
 const isDev = config.env !== 'production';
-
-// app.use(
-//   cors({
-//     origin: (origin, callback) => {
-//       // Allow requests with no origin (Postman, curl, server-to-server, mobile)
-//       if (!origin) return callback(null, true);
-//       // Dev: allow any localhost regardless of port
-//       if (isDev && /^https?:\/\/localhost(:\d+)?$/.test(origin)) {
-//         return callback(null, true);
-//       }
-//       // Production: allow only the configured client URL
-//       if (!isDev && config.clientUrl && origin === config.clientUrl) {
-//         return callback(null, true);
-//       }
-//       return callback(new Error(`CORS: origin ${origin} not allowed`));
-//     },
-//     credentials: true,
-//   })
-// );
 
 app.use(
   cors({
@@ -87,8 +73,6 @@ app.use(
     credentials: true,
   })
 );
-
-
 
 app.use(cookieParser());
 app.use(express.json());
@@ -106,9 +90,6 @@ app.use('/api/embed', embedRoutes);
 app.use('/api/contact', limiter, contactRoutes);
 
 // --- SPA FALLBACK ---
-// Any route that doesn't match an API route serves the React index.html
-// so that client-side routing (react-router) works after refresh.
-// NOTE: Express v5 requires a named catch-all parameter — bare '*' is invalid.
 app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(DIST_PATH, 'index.html'));
 });
