@@ -11,8 +11,8 @@ export const ABOUT_TEAM = [
     role: 'Team Lead',
     focus: 'Backend & System design',
     initials: 'AA',
-    github: 'https://github.com/YOUR_GITHUB_USERNAME_ABHINAV',
-    linkedin: 'https://www.linkedin.com/in/YOUR_LINKEDIN_SLUG_ABHINAV',
+    github: 'https://github.com/kaijin07',
+    linkedin: 'https://www.linkedin.com/in/abhinava-anand',
     lead: true,
   },
   {
@@ -21,8 +21,8 @@ export const ABOUT_TEAM = [
     role: '',
     focus: 'AI & MLOps',
     initials: 'PS',
-    github: 'https://github.com/YOUR_GITHUB_USERNAME_PALLAV',
-    linkedin: 'https://www.linkedin.com/in/YOUR_LINKEDIN_SLUG_PALLAV',
+    github: 'https://github.com/Pallavxs',
+    linkedin: 'https://www.linkedin.com/in/pallav-shrivastava-867b43263/',
     lead: false,
   },
   {
@@ -31,8 +31,8 @@ export const ABOUT_TEAM = [
     role: '',
     focus: 'Frontend & UI/UX',
     initials: 'MN',
-    github: 'https://github.com/YOUR_GITHUB_USERNAME_MILAN',
-    linkedin: 'https://www.linkedin.com/in/YOUR_LINKEDIN_SLUG_MILAN',
+    github: 'https://github.com/MIlAN-JS',
+    linkedin: 'https://www.linkedin.com/in/itsmilancodesu',
     lead: false,
   },
 ];

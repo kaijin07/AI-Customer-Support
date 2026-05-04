@@ -14,11 +14,18 @@ connectDB();
 const PORT = config.port;
 
 const server = createServer(app);
+
+// Restrict Socket.IO CORS to the known client origin in production
+const ioOrigin = config.env === 'production'
+  ? (config.clientUrl || false)
+  : '*';
+
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+    origin: ioOrigin,
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
 });
 
 app.set('io', io);

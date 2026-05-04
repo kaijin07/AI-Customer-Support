@@ -14,20 +14,12 @@ if(!process.env.GROQ_API_KEY) {
   throw new Error('GROQ_API_KEY is required');
 }
 
-if(process.env.NODE_ENV === 'production' && !process.env.CLIENT_URL) {
-  throw new Error('CLIENT_URL is required in production');
-}
-
 if(process.env.NODE_ENV === 'production' && !process.env.JWT_COOKIE_EXPIRE) {
   throw new Error('JWT_COOKIE_EXPIRE is required in production');
 }
 
 if(process.env.NODE_ENV === 'production' && !process.env.JWT_EXPIRE) {
   throw new Error('JWT_EXPIRE is required in production');
-} 
-
-if(process.env.NODE_ENV === 'production' && !process.env.PORT) {
-  throw new Error('PORT is required in production');
 }
 
 const config = {

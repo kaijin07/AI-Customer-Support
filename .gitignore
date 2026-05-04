@@ -6,11 +6,12 @@ node_modules/
 # Testing
 coverage/
 
-# Production
-dist/
+# Production build output — DO NOT commit built dist;
+# Render will run `npm run build` to generate it.
+client/dist/
 build/
 
-# Environment Variables
+# Environment Variables — NEVER commit secrets
 .env
 .env.local
 .env.development.local
@@ -40,3 +41,6 @@ lerna-debug.log*
 .DS_Store
 Thumbs.db
 Plan.txt
+
+# Test/demo HTML at repo root — not part of the app
+index.html

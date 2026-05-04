@@ -29,7 +29,7 @@ router.get('/script', async (req, res) => {
   const script = `
     (function() {
       const businessId = "${businessId}";
-      const apiUrl = "${config.apiUrl || 'http://localhost:5000'}";
+      const apiUrl = "${config.apiUrl}";
       
       const script = document.createElement('script');
       script.src = apiUrl + '/widget.js';

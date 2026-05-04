@@ -3,6 +3,105 @@ import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { ArrowRight, MessageCircle, Zap, TrendingUp, Shield, Sparkles } from 'lucide-react';
 
+// ─── Animated Heading (GSAP staggered letter-wave) ───────────────────────────
+// Each character is an inline-block span so GSAP can move it independently
+// without any layout shift. Spaces are preserved as-is.
+function LetterLine({ text, accentColor = false, className = '' }) {
+  const containerRef = useRef(null);
+  const tlRef = useRef(null);
+
+  const onEnter = useCallback(() => {
+    if (!containerRef.current) return;
+    const letters = containerRef.current.querySelectorAll('.h-letter');
+    if (tlRef.current) tlRef.current.kill();
+    tlRef.current = gsap.timeline();
+    tlRef.current.to(letters, {
+      y: -10,
+      // Slightly lighter / more vivid on hover via brightness
+      filter: accentColor ? 'brightness(1.22)' : 'brightness(1.0)',
+      color: accentColor ? undefined : 'var(--color-primary-hover)',
+      duration: 0.42,
+      ease: 'power2.out',
+      stagger: {
+        each: 0.028,   // 28 ms between each letter — smooth wave, not instant
+        from: 'start',
+      },
+    });
+  }, [accentColor]);
+
+  const onLeave = useCallback(() => {
+    if (!containerRef.current) return;
+    const letters = containerRef.current.querySelectorAll('.h-letter');
+    if (tlRef.current) tlRef.current.kill();
+    tlRef.current = gsap.timeline();
+    tlRef.current.to(letters, {
+      y: 0,
+      filter: 'brightness(1.0)',
+      color: accentColor ? undefined : 'var(--color-text)',
+      duration: 0.55,
+      ease: 'power3.out',
+      stagger: {
+        each: 0.022,
+        from: 'end',  // reverse the wave on leave — satisfying
+      },
+    });
+  }, [accentColor]);
+
+  return (
+    <span
+      ref={containerRef}
+      className={`inline-block overflow-visible ${className}`}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      aria-label={text}
+    >
+      {text.split('').map((ch, i) =>
+        ch === ' ' ? (
+          // Hard space — preserves natural kerning, zero width tricks
+          <span key={i} className="inline-block" style={{ width: '0.28em' }} aria-hidden="true" />
+        ) : (
+          <span
+            key={i}
+            className="h-letter inline-block will-change-transform"
+            aria-hidden="true"
+            style={accentColor ? {
+              // Gradient text via background-clip — applied once, static;
+              // brightness filter animates it on hover without re-painting
+              background: 'linear-gradient(135deg, #8b84e0 0%, #a78bfa 45%, #6d67c8 100%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent',
+              display: 'inline-block',
+            } : {
+              color: 'var(--color-text)',
+              display: 'inline-block',
+            }}
+          >
+            {ch}
+          </span>
+        )
+      )}
+    </span>
+  );
+}
+
+function AnimatedHeading() {
+  return (
+    <h1
+      className="hero-intro-title-line pointer-events-auto mb-6 font-sans text-[2rem] font-extrabold leading-[1.12] tracking-[-0.025em] sm:mb-8 sm:text-4xl sm:leading-[1.1] md:text-5xl md:leading-[1.08] cursor-default select-none"
+    >
+      {/* Line 1 — white letters that turn purple on hover */}
+      <LetterLine text="Smarter replies," className="block" />
+      {/* Line 2 — gradient letters that brighten on hover */}
+      <LetterLine text="happier customers" accentColor className="inline" />
+      <span
+        className="inline-block"
+        style={{ color: 'var(--color-primary)', marginLeft: '0.04em' }}
+      >.</span>
+    </h1>
+  );
+}
+
 const CONVO = [
   { id: '1', kind: 'user', text: 'Hey! I need help with my order #4821.' },
   { id: '2', kind: 'ai', text: 'HERMES AI: I found your order — it ships tomorrow by 6 PM! 🚀' },
@@ -243,11 +342,7 @@ export default function HomeHero() {
               </span>
             </div>
 
-            <h1 className="hero-intro-title-line pointer-events-auto text-hover-pop mb-6 font-sans text-[2rem] font-extrabold leading-[1.12] tracking-[-0.025em] text-text sm:mb-8 sm:text-4xl sm:leading-[1.1] md:text-5xl md:leading-[1.08]">
-              Smarter replies,{' '}
-              <span className="text-shimmer-hover">happier customers</span>
-              .
-            </h1>
+            <AnimatedHeading />
 
             <p className="hero-intro-sub pointer-events-auto mx-auto mb-9 max-w-[22rem] text-[15px] font-normal leading-relaxed text-muted/95 transition-[color,transform] duration-300 hover:text-text/90 sm:mb-11 sm:max-w-lg sm:text-base md:text-lg md:hover:-translate-y-0.5">
               Deploy Hermes on your site in minutes. Train once from your docs and tickets — visitors get
