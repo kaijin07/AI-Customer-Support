@@ -25,83 +25,64 @@ import contactRoutes from './routes/contactRoutes.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Resolved path to the built frontend (monorepo: server/ is at root/server)
 const DIST_PATH = path.join(__dirname, '..', '..', 'client', 'dist');
 
 const app = express();
 
 // --- PROXY TRUST ---
-// This fix allows express-rate-limit to see the real user IP on Render
+// Required for Render/Heroku so express-rate-limit sees the real user IP
 app.set('trust proxy', 1);
 
 // --- GLOBAL MIDDLEWARE ---
 
-// Security Headers — configured to allow Google OAuth popups and cross-origin widget embedding
 app.use(
   helmet({
-    // Allows external sites to load your assets (fixes ORB errors)
+    // Allows external sites to load your assets (fixes ORB)
     crossOriginResourcePolicy: { policy: 'cross-origin' },
-    // Google OAuth Fix: Allow the popup to send messages back to the site
+    // Allows Google OAuth popup to communicate with the main window
     crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
-    // In monolith mode we serve the React SPA, so disable the default
-    // contentSecurityPolicy to avoid breaking the frontend.
     contentSecurityPolicy: false,
   })
 );
 
-// Explicitly serve the widget with the correct MIME type before general static middleware
-app.get('/widget.js', (req, res) => {
-  res.set('Content-Type', 'application/javascript');
-  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-  res.sendFile(path.join(__dirname, 'public', 'widget.js'));
-});
+// Robust static serving: Adds correct MIME types and CORP headers to JS files
+app.use(express.static('public', {
+  setHeaders: (res, filepath) => {
+    if (filepath.endsWith('.js')) {
+      res.set('Content-Type', 'application/javascript');
+      res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    }
+  }
+}));
 
-// Serve static public assets (images, fonts, etc.)
-app.use(express.static('public'));
-
-// Serve built React frontend
 app.use(express.static(DIST_PATH));
 
-// Rate Limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 * 60 * 1000,
   max: 100,
-  message: {
-    success: false,
-    message: 'Too many requests from this IP, please try again after 15 minutes',
-  },
+  message: { success: false, message: 'Too many requests' },
 });
 
-// CORS Configuration
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
-);
-
+app.use(cors({ origin: true, credentials: true }));
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // --- API ROUTES ---
-
 app.use('/api/auth', limiter, authRoutes);
 app.use('/api/chat', limiter, chatRoutes);
 app.use('/api/bot-config', limiter, botConfigRoutes);
 app.use('/api/tickets', limiter, ticketRoutes);
+app.use('/api/embed', embedRoutes); 
 app.use('/api/conversations', limiter, conversationRoutes);
 app.use('/api/messages', limiter, messageRoutes);
-app.use('/api/embed', embedRoutes);
 app.use('/api/contact', limiter, contactRoutes);
 
 // --- SPA FALLBACK ---
-// Any route that doesn't match an API route serves the React index.html
 app.get('/{*splat}', (_req, res) => {
   res.sendFile(path.join(DIST_PATH, 'index.html'));
 });
 
-// --- GLOBAL ERROR HANDLER ---
 app.use(globalErrorHandler);
 
 export default app;

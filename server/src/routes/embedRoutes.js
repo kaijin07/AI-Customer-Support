@@ -39,7 +39,13 @@ router.get('/script', async (req, res) => {
     })();
   `;
 
+  // --- SECURITY HEADERS TO FIX ERR_BLOCKED_BY_ORB ---
+  // Tells the browser this is a valid JavaScript file
   res.set('Content-Type', 'application/javascript');
+  
+  // Tells the browser to allow this script to be read by external domains
+  res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+  
   res.send(script);
 });
 
